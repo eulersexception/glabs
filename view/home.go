@@ -11,6 +11,9 @@ import (
 	"fyne.io/fyne/widget"
 )
 
+var dialogButtonSize = fyne.NewSize(80, 30)
+var dialogWindowSize = fyne.NewSize(400, 150)
+
 type HomeView struct {
 	App       fyne.App
 	Window    fyne.Window
@@ -48,20 +51,80 @@ func addNewsContent() *widget.TextGrid {
 
 func addButtonForCourseCreation(tc *widget.TabContainer) *widget.Button {
 	createCourseButton := widget.NewButton("Kurs erstellen", func() {
+		var mainWindow fyne.Window
+
+		windows := fyne.CurrentApp().Driver().AllWindows()
+
+		for _, v := range windows {
+			if v.Title() == "GLabs" {
+				mainWindow = v
+			}
+		}
+
+		// initializing new window and creating content
+		w := fyne.CurrentApp().NewWindow("Kurs erstellen")
 		courseNameEntry := widget.NewEntry()
 		courseNameEntry.SetPlaceHolder("Kurs Bezeichnung")
 		courseDescription := widget.NewMultiLineEntry()
 		courseDescription.SetPlaceHolder("Kursbeschreibung eingeben")
+
+		// adding form
 		form := widget.NewForm(widget.NewFormItem("Kurs", courseNameEntry), widget.NewFormItem("Beschreibung", courseDescription))
-		button := widget.NewButton("Fertig", func() {
-			courseDescription.SetText(fmt.Sprintf("%s%s", courseDescription.Text, "\n\nDaten gespeichert!"))
-			courseDescription.SetReadOnly(true)
-			courseNameEntry.SetReadOnly(true)
+
+		// buttons ok and cancel
+		doneButton := widget.NewButton("Fertig", func() {
+			doneWindow := fyne.CurrentApp().NewWindow(fmt.Sprintf("Kurs \"%s\" erstellen?", courseNameEntry.Text))
+			message := widget.NewLabel(fmt.Sprintf("Soll der Kurs \"%s\" erstellt werden?", courseNameEntry.Text))
+			messageBox := fyne.NewContainerWithLayout(layout.NewCenterLayout(), message)
+			ok := widget.NewButton("OK", func() {
+				courseDescription.SetReadOnly(true)
+				courseNameEntry.SetReadOnly(true)
+				mainWindow.Content().Refresh()
+				mainWindow.RequestFocus()
+				doneWindow.Close()
+				w.Close()
+			})
+			cancel := widget.NewButton("Abbrechen", func() {
+				doneWindow.Close()
+				w.RequestFocus()
+			})
+
+			buttonBox := widget.NewHSplitContainer(ok, cancel)
+			doneWindow.SetContent(widget.NewVBox(layout.NewSpacer(), messageBox, layout.NewSpacer(), buttonBox))
+			doneWindow.Resize(dialogWindowSize)
+			doneWindow.CenterOnScreen()
+			doneWindow.Show()
 		})
-		button.Resize(fyne.NewSize(100, 20))
-		container := fyne.NewContainerWithLayout(layout.NewVBoxLayout(), form, layout.NewSpacer(), button)
-		item := widget.NewTabItem("Kurs erstellen", container)
-		tc.Append(item)
+
+		cancelButton := widget.NewButton("Abbrechen", func() {
+			warningMessageWindow := fyne.CurrentApp().NewWindow("Vorgang abbrechen")
+			warning := widget.NewLabel("Klicken Sie \"Ok\", um die Eingabe abzubrechen.\nDie Daten werden nicht gespeichert. Fortfahren?")
+			warningBox := fyne.NewContainerWithLayout(layout.NewCenterLayout(), warning)
+			ok := widget.NewButton("Ok", func() {
+				mainWindow.RequestFocus()
+				warningMessageWindow.Close()
+				w.Close()
+			})
+			cancel := widget.NewButton("Abbrechen", func() {
+				warningMessageWindow.Close()
+				w.RequestFocus()
+			})
+
+			buttonBox := widget.NewHSplitContainer(ok, cancel)
+			container := widget.NewVBox(layout.NewSpacer(), warningBox, layout.NewSpacer(), buttonBox)
+			warningMessageWindow.SetContent(container)
+			warningMessageWindow.Resize(dialogWindowSize)
+			warningMessageWindow.CenterOnScreen()
+			courseNameEntry.Enable()
+			warningMessageWindow.Show()
+		})
+
+		buttons := widget.NewHSplitContainer(doneButton, cancelButton)
+		container := widget.NewVScrollContainer(widget.NewVBox(form, layout.NewSpacer(), buttons))
+		w.SetContent(container)
+		w.Resize(fyne.NewSize(800, 600))
+		w.CenterOnScreen()
+		w.Show()
 	})
 
 	return createCourseButton
@@ -70,7 +133,9 @@ func addButtonForCourseCreation(tc *widget.TabContainer) *widget.Button {
 func addButtonForCourseOverview(tc *widget.TabContainer) *widget.Button {
 	overviewButton := widget.NewButton("Kursübersicht", func() {
 		courseOverview := NewCourseOverview(createDummyCourses(30), tc)
-		tc.Append(widget.NewTabItem("Kursübersicht", courseOverview.Container))
+		item := widget.NewTabItem("Kursübersicht", courseOverview.Container)
+		tc.Append(item)
+		item.Content.Refresh()
 	})
 
 	return overviewButton

@@ -6,7 +6,6 @@ import (
 	glabsmodel "github.com/eulersexception/glabs-ui/model"
 
 	"fyne.io/fyne"
-	"fyne.io/fyne/layout"
 	"fyne.io/fyne/widget"
 )
 
@@ -19,13 +18,18 @@ func NewCourseDetailView(course *glabsmodel.Course) *CourseDetailView {
 	c := &CourseDetailView{
 		Course: course,
 	}
-
-	header := widget.NewLabelWithStyle(c.Course.Name, fyne.TextAlignLeading, fyne.TextStyle{Bold: true})
+	group := widget.NewGroup("")
+	header := widget.NewLabel(c.Course.Name)
 	description := widget.NewTextGrid()
 	description.SetText(c.Course.Description)
+	description.Resize(fyne.NewSize(300, 300))
 	url := widget.NewHyperlink("Repo", &url.URL{Scheme: "https", Host: c.Course.Url})
-	layout := fyne.NewContainerWithLayout(layout.NewVBoxLayout(), header, description, url)
-	c.Container = widget.NewVScrollContainer(layout)
+	group.Append(header)
+	group.Append(description)
+	group.Append(url)
+	//spacer := layout.NewSpacer()
+	//layout := widget.NewVBox(header, spacer, description, spacer, url, spacer, spacer, spacer, spacer)
+	c.Container = widget.NewVScrollContainer(group)
 
 	return c
 }
