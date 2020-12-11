@@ -12,18 +12,18 @@ import (
 	"fyne.io/fyne/widget"
 )
 
-type TeamOverview struct {
+type AssignmentOverview struct {
 	TabContainer *widget.TabContainer
 	Container    *widget.ScrollContainer
-	Teams        []*glabsmodel.Team
-	Assignment   *glabsmodel.Assignment
+	Assignments  []*glabsmodel.Assignment
+	Semester     *glabsmodel.Semester
 }
 
-func NewTeamOverview(assignment *glabsmodel.Assignment, tc *widget.TabContainer) *TeamOverview {
-	a := &TeamOverview{
-		Teams:        assignment.Teams,
+func NewAssignmentOverview(semester *glabsmodel.Semester, tc *widget.TabContainer) *AssignmentOverview {
+	a := &AssignmentOverview{
+		Assignments:  semester.Assignments,
 		TabContainer: tc,
-		Assignment:   assignment,
+		Semester:     semester,
 	}
 
 	group := widget.NewGroup(fmt.Sprintf("Assignmentübersicht %s", semester.Name))

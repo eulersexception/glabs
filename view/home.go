@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	glabsmodel "github.com/eulersexception/glabs-ui/model"
+	glabsutil "github.com/eulersexception/glabs-ui/util"
 
 	"fyne.io/fyne"
 	"fyne.io/fyne/app"
@@ -21,6 +22,7 @@ type HomeView struct {
 	News      *widget.TextGrid
 	Buttons   *widget.SplitContainer
 	Container *fyne.Container
+	MainMenu  *fyne.MainMenu
 }
 
 func NewHomeview() *HomeView {
@@ -29,9 +31,12 @@ func NewHomeview() *HomeView {
 	}
 
 	h.Window = h.App.NewWindow("GLabs")
+	h.MainMenu = glabsutil.MakeMainMenu()
+	h.Window.SetMainMenu(h.MainMenu)
 	h.TabBar = widget.NewTabContainer()
-	h.Buttons = widget.NewHSplitContainer(addButtonForCourseOverview(h.TabBar), addButtonForCourseCreation(h.TabBar))
-	h.News = addNewsContent()
+
+	h.Buttons = widget.NewHSplitContainer(makeButtonForCourseOverview(h.TabBar), MakeButtonForCourseCreation(h.TabBar))
+	h.News = makeNewsContent()
 	h.Container = fyne.NewContainerWithLayout(layout.NewVBoxLayout(), layout.NewSpacer(), h.News, layout.NewSpacer(), layout.NewSpacer(), h.Buttons)
 	item := widget.NewTabItem("Home", h.Container)
 	h.TabBar.Append(item)
@@ -42,36 +47,27 @@ func NewHomeview() *HomeView {
 	return h
 }
 
-func addNewsContent() *widget.TextGrid {
+func makeNewsContent() *widget.TextGrid {
 	newsTicker := widget.NewTextGrid()
 	newsTicker.SetText("Here you can see a lot of updates for all the repos")
 
 	return newsTicker
 }
 
-func addButtonForCourseCreation(tc *widget.TabContainer) *widget.Button {
+func MakeButtonForCourseCreation(tc *widget.TabContainer) *widget.Button {
+
 	createCourseButton := widget.NewButton("Kurs erstellen", func() {
-		var mainWindow fyne.Window
+		mainWindow := glabsutil.GetMainWindow()
 
-		windows := fyne.CurrentApp().Driver().AllWindows()
-
-		for _, v := range windows {
-			if v.Title() == "GLabs" {
-				mainWindow = v
-			}
-		}
-
-		// initializing new window and creating content
+		// initializing new window, creating entries and form
 		w := fyne.CurrentApp().NewWindow("Kurs erstellen")
 		courseNameEntry := widget.NewEntry()
 		courseNameEntry.SetPlaceHolder("Kurs Bezeichnung")
 		courseDescription := widget.NewMultiLineEntry()
 		courseDescription.SetPlaceHolder("Kursbeschreibung eingeben")
-
-		// adding form
 		form := widget.NewForm(widget.NewFormItem("Kurs", courseNameEntry), widget.NewFormItem("Beschreibung", courseDescription))
 
-		// buttons ok and cancel
+		// ok button
 		doneButton := widget.NewButton("Fertig", func() {
 			doneWindow := fyne.CurrentApp().NewWindow(fmt.Sprintf("Kurs \"%s\" erstellen?", courseNameEntry.Text))
 			message := widget.NewLabel(fmt.Sprintf("Soll der Kurs \"%s\" erstellt werden?", courseNameEntry.Text))
@@ -96,33 +92,16 @@ func addButtonForCourseCreation(tc *widget.TabContainer) *widget.Button {
 			doneWindow.Show()
 		})
 
-		cancelButton := widget.NewButton("Abbrechen", func() {
-			warningMessageWindow := fyne.CurrentApp().NewWindow("Vorgang abbrechen")
-			warning := widget.NewLabel("Klicken Sie \"Ok\", um die Eingabe abzubrechen.\nDie Daten werden nicht gespeichert. Fortfahren?")
-			warningBox := fyne.NewContainerWithLayout(layout.NewCenterLayout(), warning)
-			ok := widget.NewButton("Ok", func() {
-				mainWindow.RequestFocus()
-				warningMessageWindow.Close()
-				w.Close()
-			})
-			cancel := widget.NewButton("Abbrechen", func() {
-				warningMessageWindow.Close()
-				w.RequestFocus()
-			})
+		// cancel button
+		cancelButton := glabsutil.MakeCancelButtonForDialog(mainWindow, w)
 
-			buttonBox := widget.NewHSplitContainer(ok, cancel)
-			container := widget.NewVBox(layout.NewSpacer(), warningBox, layout.NewSpacer(), buttonBox)
-			warningMessageWindow.SetContent(container)
-			warningMessageWindow.Resize(dialogWindowSize)
-			warningMessageWindow.CenterOnScreen()
-			courseNameEntry.Enable()
-			warningMessageWindow.Show()
-		})
-
+		// wrapping widgets in container
 		buttons := widget.NewHSplitContainer(doneButton, cancelButton)
 		container := widget.NewVScrollContainer(widget.NewVBox(form, layout.NewSpacer(), buttons))
 		w.SetContent(container)
 		w.Resize(fyne.NewSize(800, 600))
+
+		// displaying on center of screen
 		w.CenterOnScreen()
 		w.Show()
 	})
@@ -130,7 +109,7 @@ func addButtonForCourseCreation(tc *widget.TabContainer) *widget.Button {
 	return createCourseButton
 }
 
-func addButtonForCourseOverview(tc *widget.TabContainer) *widget.Button {
+func makeButtonForCourseOverview(tc *widget.TabContainer) *widget.Button {
 	overviewButton := widget.NewButton("Kursübersicht", func() {
 		courseOverview := NewCourseOverview(createDummyCourses(30), tc)
 		item := widget.NewTabItem("Kursübersicht", courseOverview.Container)

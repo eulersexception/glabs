@@ -8,7 +8,7 @@ type Course struct {
 	Name        string
 	Description string
 	Url         string
-	Semesters   []Semester
+	Semesters   []*Semester
 }
 
 func NewCourse(name string, description string) *Course {
@@ -18,7 +18,7 @@ func NewCourse(name string, description string) *Course {
 		return nil
 	}
 
-	var semesters []Semester
+	var semesters []*Semester
 
 	c := &Course{
 		Name:      name,
@@ -38,7 +38,7 @@ func (c *Course) AddSemesterToCourse(s *Semester) *Course {
 		return c
 	}
 
-	c.Semesters = append(c.Semesters, *s)
+	c.Semesters = append(c.Semesters, s)
 
 	return c
 }

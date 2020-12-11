@@ -5,7 +5,7 @@ import "fmt"
 type Team struct {
 	Name     string
 	Url      string
-	Students []Student
+	Students []*Student
 }
 
 func NewTeam(name string, url string) *Team {
@@ -14,7 +14,7 @@ func NewTeam(name string, url string) *Team {
 		return nil
 	}
 
-	var students []Student
+	var students []*Student
 
 	team := &Team{
 		Name:     name,
@@ -26,7 +26,7 @@ func NewTeam(name string, url string) *Team {
 }
 
 func (t *Team) AddStudentToTeam(s *Student) *Team {
-	t.Students = append(t.Students, *s)
+	t.Students = append(t.Students, s)
 
 	return t
 }

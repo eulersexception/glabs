@@ -3,46 +3,50 @@ package model
 import "fmt"
 
 type Semester struct {
-	Name  string
-	Repos []Repository
+	Course      *Course
+	Name        string
+	Assignments []*Assignment
+	Url         string
 }
 
-func NewSemester(name string) *Semester {
+func NewSemester(name string, url string, course *Course) *Semester {
 	if name == "" {
 		fmt.Println("Provide a valid naming for semester")
 		return nil
 	}
 
-	var repos []Repository
+	var assignments []*Assignment
 
 	semester := &Semester{
-		Name:  name,
-		Repos: repos,
+		Course:      course,
+		Name:        name,
+		Assignments: assignments,
+		Url:         url,
 	}
 
 	return semester
 }
 
-func (s *Semester) AddRepoToSemester(repo *Repository) *Semester {
-	if repo == nil {
+func (s *Semester) AddAssignmentToSemester(a *Assignment) *Semester {
+	if a == nil {
 		fmt.Println("No valid data for repository")
 		return s
 	}
 
-	s.Repos = append(s.Repos, *repo)
+	s.Assignments = append(s.Assignments, a)
 
 	return s
 }
 
-func (s *Semester) DeleteRepoFromSemester(repo *Repository) *Semester {
-	if repo == nil {
+func (s *Semester) DeleteAssignmentFromSemester(a *Assignment) *Semester {
+	if a == nil {
 		fmt.Println("No valid data for repository")
 	}
 
 	index := -1
 
-	for i, v := range s.Repos {
-		if v.Name == repo.Name {
+	for i, v := range s.Assignments {
+		if v.Name == a.Name {
 			index = i
 		}
 	}
@@ -51,8 +55,8 @@ func (s *Semester) DeleteRepoFromSemester(repo *Repository) *Semester {
 		return s
 	}
 
-	s.Repos[index] = s.Repos[len(s.Repos)-1]
-	s.Repos = s.Repos[:len(s.Repos)-1]
+	s.Assignments[index] = s.Assignments[len(s.Assignments)-1]
+	s.Assignments = s.Assignments[:len(s.Assignments)-1]
 
 	return s
 }

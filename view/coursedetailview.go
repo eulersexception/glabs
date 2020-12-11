@@ -1,35 +1,56 @@
 package view
 
 import (
+	"fmt"
 	"net/url"
 
 	glabsmodel "github.com/eulersexception/glabs-ui/model"
+	glabsutil "github.com/eulersexception/glabs-ui/util"
 
 	"fyne.io/fyne"
 	"fyne.io/fyne/widget"
 )
 
 type CourseDetailView struct {
-	Container *widget.ScrollContainer
-	Course    *glabsmodel.Course
+	TabContainer *widget.TabContainer
+	Container    *fyne.Container
+	Course       *glabsmodel.Course
 }
 
-func NewCourseDetailView(course *glabsmodel.Course) *CourseDetailView {
+func NewCourseDetailView(course *glabsmodel.Course, tc *widget.TabContainer) *CourseDetailView {
 	c := &CourseDetailView{
-		Course: course,
+		Course:       course,
+		TabContainer: tc,
 	}
-	group := widget.NewGroup("")
-	header := widget.NewLabel(c.Course.Name)
-	description := widget.NewTextGrid()
-	description.SetText(c.Course.Description)
-	description.Resize(fyne.NewSize(300, 300))
+
+	// building body
+	group := widget.NewGroup(fmt.Sprintf("Kurs %s", c.Course.Name))
+	description := widget.NewLabel(c.Course.Description)
+	description.Wrapping = fyne.TextWrapWord
 	url := widget.NewHyperlink("Repo", &url.URL{Scheme: "https", Host: c.Course.Url})
-	group.Append(header)
 	group.Append(description)
 	group.Append(url)
-	//spacer := layout.NewSpacer()
-	//layout := widget.NewVBox(header, spacer, description, spacer, url, spacer, spacer, spacer, spacer)
-	c.Container = widget.NewVScrollContainer(group)
+	body := widget.NewVScrollContainer(group)
+	mainWindowSize := glabsutil.GetMainWindow().Content().Size()
+	body.SetMinSize(fyne.NewSize(int(float64(mainWindowSize.Width)*0.8), int(float64(mainWindowSize.Height)*0.8)))
+
+	// buttons at the bottom
+	left := makeButtonForSemesterOverview(c.TabContainer, c.Course)
+	right := glabsutil.MakeCloseButton(c.TabContainer)
+	buttons := glabsutil.MakeButtonGroup(left, right)
+
+	// pack components
+	c.Container = glabsutil.MakeScrollableView(body, buttons)
 
 	return c
+}
+
+func makeButtonForSemesterOverview(tc *widget.TabContainer, c *glabsmodel.Course) *widget.Button {
+	overviewButton := widget.NewButton("Semesterübersicht", func() {
+		semesterOverview := NewSemesterOverview(tc, c)
+		item := widget.NewTabItem(fmt.Sprintf("Semester %s", c.Name), semesterOverview.Container)
+		tc.Append(item)
+	})
+
+	return overviewButton
 }
