@@ -31,8 +31,6 @@ func NewCourseDetailView(course *glabsmodel.Course, tc *widget.TabContainer) *Co
 	group.Append(description)
 	group.Append(url)
 	body := widget.NewVScrollContainer(group)
-	mainWindowSize := glabsutil.GetMainWindow().Content().Size()
-	body.SetMinSize(fyne.NewSize(int(float64(mainWindowSize.Width)*0.8), int(float64(mainWindowSize.Height)*0.8)))
 
 	// buttons at the bottom
 	left := makeButtonForSemesterOverview(c.TabContainer, c.Course)

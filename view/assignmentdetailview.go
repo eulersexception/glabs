@@ -1,12 +1,13 @@
 package view
 
 import (
+	"fmt"
 	"net/url"
 
 	glabsmodel "github.com/eulersexception/glabs-ui/model"
+	glabsutil "github.com/eulersexception/glabs-ui/util"
 
 	"fyne.io/fyne"
-	"fyne.io/fyne/layout"
 	"fyne.io/fyne/widget"
 )
 
@@ -27,8 +28,23 @@ func NewAssignmentDetailView(assignment *glabsmodel.Assignment, tc *widget.TabCo
 	url := widget.NewHyperlink("Repo", &url.URL{Scheme: "https", Host: as.Assignment.Url})
 	group.Append(desc)
 	group.Append(url)
+	body := widget.NewVScrollContainer(group)
 
-	as.Container = fyne.NewContainerWithLayout(layout.NewVBoxLayout(), group)
+	left := makeButtonForTeamOverview(tc, as.Assignment)
+	right := glabsutil.MakeCloseButton(tc)
+	buttons := glabsutil.MakeButtonGroup(left, right)
+
+	as.Container = glabsutil.MakeScrollableView(body, buttons)
 
 	return as
+}
+
+func makeButtonForTeamOverview(tc *widget.TabContainer, as *glabsmodel.Assignment) *widget.Button {
+	overviewButton := widget.NewButton("Teamübersicht", func() {
+		teamOverview := NewTeamOverview(as, tc)
+		item := widget.NewTabItem(fmt.Sprintf("Teams %s", as.Name), teamOverview.Container)
+		tc.Append(item)
+	})
+
+	return overviewButton
 }

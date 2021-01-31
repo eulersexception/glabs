@@ -36,7 +36,7 @@ func NewAssignmentOverview(semester *glabsmodel.Semester, tc *widget.TabContaine
 				Teams: v.Teams,
 			}
 
-			addTeams(5, currentAssignment, semester)
+			addTeams(5, currentAssignment, a.Semester)
 
 			button := widget.NewButton("Details", func() {
 				tc.Append(widget.NewTabItem(currentAssignment.Name, NewAssignmentDetailView(currentAssignment, tc).Container))

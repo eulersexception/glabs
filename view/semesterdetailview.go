@@ -28,12 +28,13 @@ func NewSemesterDetailView(semester *glabsmodel.Semester, tc *widget.TabContaine
 	url := widget.NewHyperlink("Repo", &url.URL{Scheme: "https", Host: s.Semester.Url})
 	group.Append(name)
 	group.Append(url)
+	body := widget.NewVScrollContainer(group)
 
 	left := makeButtonForAssignmentOverview(tc, s.Semester)
 	right := glabsutil.MakeCloseButton(s.TabContainer)
 	buttons := glabsutil.MakeButtonGroup(left, right)
 
-	s.Container = glabsutil.MakeScrollableView(widget.NewVScrollContainer(group), buttons)
+	s.Container = glabsutil.MakeScrollableView(body, buttons)
 
 	return s
 }

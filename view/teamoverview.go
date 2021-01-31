@@ -26,20 +26,20 @@ func NewTeamOverview(assignment *glabsmodel.Assignment, tc *widget.TabContainer)
 		Assignment:   assignment,
 	}
 
-	group := widget.NewGroup(fmt.Sprintf("Assignmentübersicht %s", semester.Name))
+	group := widget.NewGroup(fmt.Sprintf("Teamübersicht %s", assignment.Name))
 
-	if a.Assignments != nil {
-		for _, v := range a.Assignments {
-			currentAssignment := &glabsmodel.Assignment{
-				Name:  v.Name,
-				Url:   v.Url,
-				Teams: v.Teams,
+	if a.Teams != nil {
+		for _, v := range a.Teams {
+			currentTeam := &glabsmodel.Team{
+				Name:     v.Name,
+				Url:      v.Url,
+				Students: v.Students,
 			}
 
-			addTeams(5, currentAssignment, semester)
+			addStudents(5, currentTeam)
 
 			button := widget.NewButton("Details", func() {
-				tc.Append(widget.NewTabItem(currentAssignment.Name, NewAssignmentDetailView(currentAssignment, tc).Container))
+				tc.Append(widget.NewTabItem(currentTeam.Name, NewTeamDetailView(currentTeam, tc).Container))
 				tc.Remove(tc.CurrentTab())
 			})
 			label := widget.NewLabel(v.Name)
@@ -52,7 +52,7 @@ func NewTeamOverview(assignment *glabsmodel.Assignment, tc *widget.TabContainer)
 		a.Container = widget.NewVScrollContainer(group)
 
 	} else {
-		text := widget.NewLabel("Aktuell keine Assignments vorhanden")
+		text := widget.NewLabel("Aktuell keine Teams vorhanden")
 		left := MakeButtonForCourseCreation(tc)
 		right := glabsutil.MakeCloseButton(tc)
 		buttons := glabsutil.MakeButtonGroup(left, right)
@@ -63,14 +63,11 @@ func NewTeamOverview(assignment *glabsmodel.Assignment, tc *widget.TabContainer)
 	return a
 }
 
-func addTeams(n int, as *glabsmodel.Assignment, s *glabsmodel.Semester) {
-	temp := fmt.Sprintf("%s %s %s", s.Course.Name, s.Name, as.Name)
-
+func addStudents(n int, t *glabsmodel.Team) {
 	for i := 0; i < n; i++ {
-
-		name := fmt.Sprintf("Team %d", i)
-		url := fmt.Sprintf("%s-%s", temp, name)
-		t := glabsmodel.NewTeam(name, url)
-		as.AddTeamToAssignment(t)
+		s := glabsmodel.NewStudent(i, fmt.Sprintf("Max der %d.", i), "Mustermann")
+		s.NickName = fmt.Sprintf("max_payne_%d", i)
+		s.Mail(fmt.Sprintf("einsteinNo_%d_@fantasiaschool.edu", i))
+		t.AddStudentToTeam(s)
 	}
 }

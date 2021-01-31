@@ -24,6 +24,8 @@ func MakeButtonGroup(left *widget.Button, right *widget.Button) *widget.SplitCon
 }
 
 func MakeScrollableView(body *widget.ScrollContainer, buttons *widget.SplitContainer) *fyne.Container {
+	mainWindowSize := GetMainWindow().Content().Size()
+	body.SetMinSize(fyne.NewSize(int(float64(mainWindowSize.Width)*0.8), int(float64(mainWindowSize.Height)*0.8)))
 	return fyne.NewContainerWithLayout(layout.NewVBoxLayout(), body, layout.NewSpacer(), buttons)
 }
 
