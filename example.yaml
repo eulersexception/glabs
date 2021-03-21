@@ -1,0 +1,36 @@
+vss:
+  coursepath: vss
+  semesterpath: semester/ob-20ws
+  
+  blatt1:
+    per: group
+    assignmentpath: blatt1
+    description: Blatt 1, Verteilte Softwaresysteme, WS 20/21
+    containerRegistry: true
+    startercode:
+      url: git@gitlab.lrz.de:vss/startercode/startercodeB1.git
+      fromBranch: ws20.1
+      protectToBranch: true
+    clone:
+      localpath: /Users/obraun/lectures/vss/labs/gitlab/semester/ob-20ws/blatt1
+      branch: develop
+
+  blatt2:
+    per: group
+    assignmentpath: blatt2
+    description: Blatt 2, Verteilte Softwaresysteme, WS 20/21
+    containerRegistry: true
+    startercode:
+      url: git@gitlab.lrz.de:vss/startercode/startercodeB2.git
+      fromBranch: ws20
+      protectToBranch: true
+    clone:
+      localpath: /Users/obraun/lectures/vss/labs/gitlab/semester/ob-20ws/blatt2
+      branch: develop
+
+  groups:
+    grp01:
+      - obcode
+    grp02:
+      - hugo
+      - helga

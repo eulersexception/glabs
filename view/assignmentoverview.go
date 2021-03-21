@@ -2,7 +2,6 @@ package view
 
 import (
 	"fmt"
-	"net/url"
 
 	glabsmodel "github.com/eulersexception/glabs-ui/model"
 	glabsutil "github.com/eulersexception/glabs-ui/util"
@@ -31,9 +30,11 @@ func NewAssignmentOverview(semester *glabsmodel.Semester, tc *widget.TabContaine
 	if a.Assignments != nil {
 		for _, v := range a.Assignments {
 			currentAssignment := &glabsmodel.Assignment{
-				Name:  v.Name,
-				Url:   v.Url,
-				Teams: v.Teams,
+				Semester:   v.Semester,
+				Name:       v.Name,
+				Starter:    v.Starter,
+				LocalClone: v.LocalClone,
+				Teams:      v.Teams,
 			}
 
 			addTeams(5, currentAssignment, a.Semester)
@@ -43,9 +44,7 @@ func NewAssignmentOverview(semester *glabsmodel.Semester, tc *widget.TabContaine
 				tc.Remove(tc.CurrentTab())
 			})
 			label := widget.NewLabel(v.Name)
-			url := widget.NewHyperlink("Repo", &url.URL{Scheme: "https", Host: v.Url})
-			url.Wrapping = fyne.TextTruncate
-			line := widget.NewHBox(label, url, layout.NewSpacer(), button)
+			line := widget.NewHBox(label, layout.NewSpacer(), button)
 			group.Append(line)
 		}
 
@@ -64,13 +63,9 @@ func NewAssignmentOverview(semester *glabsmodel.Semester, tc *widget.TabContaine
 }
 
 func addTeams(n int, as *glabsmodel.Assignment, s *glabsmodel.Semester) {
-	temp := fmt.Sprintf("%s %s %s", s.Course.Name, s.Name, as.Name)
-
 	for i := 0; i < n; i++ {
-
 		name := fmt.Sprintf("Team %d", i)
-		url := fmt.Sprintf("%s-%s", temp, name)
-		t := glabsmodel.NewTeam(name, url)
+		t := glabsmodel.NewTeam(as, name)
 		as.AddTeamToAssignment(t)
 	}
 }

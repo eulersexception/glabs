@@ -3,13 +3,12 @@ package model
 import "fmt"
 
 type Semester struct {
-	Course      *Course
 	Name        string
+	Course      *Course
 	Assignments []*Assignment
-	Url         string
 }
 
-func NewSemester(name string, url string, course *Course) *Semester {
+func NewSemester(course *Course, name string, url string) *Semester {
 	if name == "" {
 		fmt.Println("Provide a valid naming for semester")
 		return nil
@@ -21,7 +20,6 @@ func NewSemester(name string, url string, course *Course) *Semester {
 		Course:      course,
 		Name:        name,
 		Assignments: assignments,
-		Url:         url,
 	}
 
 	return semester

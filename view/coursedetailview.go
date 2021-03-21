@@ -2,7 +2,6 @@ package view
 
 import (
 	"fmt"
-	"net/url"
 
 	glabsmodel "github.com/eulersexception/glabs-ui/model"
 	glabsutil "github.com/eulersexception/glabs-ui/util"
@@ -27,9 +26,7 @@ func NewCourseDetailView(course *glabsmodel.Course, tc *widget.TabContainer) *Co
 	group := widget.NewGroup(fmt.Sprintf("Kurs %s", c.Course.Name))
 	description := widget.NewLabel(c.Course.Description)
 	description.Wrapping = fyne.TextWrapWord
-	url := widget.NewHyperlink("Repo", &url.URL{Scheme: "https", Host: c.Course.Url})
 	group.Append(description)
-	group.Append(url)
 	body := widget.NewVScrollContainer(group)
 
 	// buttons at the bottom

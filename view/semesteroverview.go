@@ -67,7 +67,6 @@ func addAssignments(n int, s *glabsmodel.Semester) {
 	for i := 0; i < n; i++ {
 		as := &glabsmodel.Assignment{
 			Name: fmt.Sprintf("Assignment %d %s", i, s.Name),
-			Url:  "www.google.com",
 		}
 		s.AddAssignmentToSemester(as)
 	}

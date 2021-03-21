@@ -32,9 +32,11 @@ func NewStudentOverview(team *glabsmodel.Team, tc *widget.TabContainer) *Student
 		for _, v := range s.Students {
 			currentStudent := &glabsmodel.Student{
 				Id:        v.Id,
+				Team:      v.Team,
 				FirstName: v.FirstName,
 				Name:      v.Name,
 				NickName:  v.NickName,
+				Email:     v.Email,
 			}
 			currentStudent.Mail(v.GetMail())
 

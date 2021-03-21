@@ -2,7 +2,6 @@ package view
 
 import (
 	"fmt"
-	"net/url"
 
 	glabsmodel "github.com/eulersexception/glabs-ui/model"
 	glabsutil "github.com/eulersexception/glabs-ui/util"
@@ -31,9 +30,9 @@ func NewTeamOverview(assignment *glabsmodel.Assignment, tc *widget.TabContainer)
 	if a.Teams != nil {
 		for _, v := range a.Teams {
 			currentTeam := &glabsmodel.Team{
-				Name:     v.Name,
-				Url:      v.Url,
-				Students: v.Students,
+				Assignment: assignment,
+				Name:       v.Name,
+				Students:   v.Students,
 			}
 
 			addStudents(5, currentTeam)
@@ -43,9 +42,7 @@ func NewTeamOverview(assignment *glabsmodel.Assignment, tc *widget.TabContainer)
 				tc.Remove(tc.CurrentTab())
 			})
 			label := widget.NewLabel(v.Name)
-			url := widget.NewHyperlink("Repo", &url.URL{Scheme: "https", Host: v.Url})
-			url.Wrapping = fyne.TextTruncate
-			line := widget.NewHBox(label, url, layout.NewSpacer(), button)
+			line := widget.NewHBox(label, layout.NewSpacer(), button)
 			group.Append(line)
 		}
 
@@ -65,9 +62,9 @@ func NewTeamOverview(assignment *glabsmodel.Assignment, tc *widget.TabContainer)
 
 func addStudents(n int, t *glabsmodel.Team) {
 	for i := 0; i < n; i++ {
-		s := glabsmodel.NewStudent(i, fmt.Sprintf("Max der %d.", i), "Mustermann")
-		s.NickName = fmt.Sprintf("max_payne_%d", i)
-		s.Mail(fmt.Sprintf("einsteinNo_%d_@fantasiaschool.edu", i))
+		nick := fmt.Sprintf("max_payne_%d", i)
+		mail := fmt.Sprintf("einsteinNo_%d_@fantasiaschool.edu", i)
+		s := glabsmodel.NewStudent(t, "Mustermann", fmt.Sprintf("Max der %d.", i), nick, mail, uint32(i))
 		t.AddStudentToTeam(s)
 	}
 }

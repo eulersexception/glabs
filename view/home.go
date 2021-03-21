@@ -126,7 +126,7 @@ func createDummyCourses(n int) []*glabsmodel.Course {
 	for i := 0; i < n; i++ {
 		name := fmt.Sprintf("AlgoDat %02d", i)
 		description := fmt.Sprintf("Algorithmen pur Teil %d", i)
-		course := &glabsmodel.Course{Name: name, Description: description, Url: "google.de", Semesters: nil}
+		course := &glabsmodel.Course{Name: name, Description: description, Semesters: nil}
 		courses = append(courses, course)
 	}
 

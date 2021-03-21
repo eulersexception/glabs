@@ -1,0 +1,9 @@
+# database content folder and files
+/tmp
+/tmp/badger/*.sst
+/tmp/badger/*.vlog
+*.vlog
+*.sst
+
+
+

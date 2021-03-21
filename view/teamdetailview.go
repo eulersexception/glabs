@@ -2,7 +2,6 @@ package view
 
 import (
 	"fmt"
-	"net/url"
 
 	glabsmodel "github.com/eulersexception/glabs-ui/model"
 	glabsutil "github.com/eulersexception/glabs-ui/util"
@@ -25,9 +24,7 @@ func NewTeamDetailView(team *glabsmodel.Team, tc *widget.TabContainer) *TeamDeta
 
 	group := widget.NewGroup(fmt.Sprintf("Details %s", t.Team.Name))
 	label := widget.NewLabel(fmt.Sprintf("Beschreibung:\nDas ist Assignment von %s", t.Team.Name))
-	url := widget.NewHyperlink("Link zum Team", &url.URL{Scheme: "https", Host: t.Team.Url})
 	group.Append(label)
-	group.Append(url)
 	body := widget.NewVScrollContainer(group)
 
 	left := makeButtonForStudentsOverview(tc, t.Team)

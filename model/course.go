@@ -7,7 +7,6 @@ import (
 type Course struct {
 	Name        string
 	Description string
-	Url         string
 	Semesters   []*Semester
 }
 

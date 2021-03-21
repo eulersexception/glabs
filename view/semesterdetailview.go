@@ -2,7 +2,6 @@ package view
 
 import (
 	"fmt"
-	"net/url"
 
 	glabsmodel "github.com/eulersexception/glabs-ui/model"
 	glabsutil "github.com/eulersexception/glabs-ui/util"
@@ -25,9 +24,7 @@ func NewSemesterDetailView(semester *glabsmodel.Semester, tc *widget.TabContaine
 
 	group := widget.NewGroup(fmt.Sprintf("%s", s.Semester.Name))
 	name := widget.NewLabel(s.Semester.Name)
-	url := widget.NewHyperlink("Repo", &url.URL{Scheme: "https", Host: s.Semester.Url})
 	group.Append(name)
-	group.Append(url)
 	body := widget.NewVScrollContainer(group)
 
 	left := makeButtonForAssignmentOverview(tc, s.Semester)

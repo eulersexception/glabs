@@ -30,7 +30,6 @@ func NewCourseOverview(courses []*glabsmodel.Course, tc *widget.TabContainer) *C
 			currentCourse := &glabsmodel.Course{
 				Name:        v.Name,
 				Description: v.Description,
-				Url:         v.Url,
 				Semesters:   v.Semesters,
 			}
 
@@ -68,13 +67,12 @@ func addSemesters(n int, course *glabsmodel.Course) {
 
 		// summer
 		name := fmt.Sprintf("%s Sommersemester %d", course.Name, (year + i))
-		url := "www.google.de"
-		summer := &glabsmodel.Semester{Name: name, Url: url, Course: course}
+		summer := &glabsmodel.Semester{Name: name, Course: course}
 		course.AddSemesterToCourse(summer)
 
 		// winter
 		name = fmt.Sprintf("%s Wintersemester %d/%d", course.Name, (year + i), (year + i + 1))
-		winter := &glabsmodel.Semester{Name: name, Url: url, Course: course}
+		winter := &glabsmodel.Semester{Name: name, Course: course}
 		course.AddSemesterToCourse(winter)
 	}
 }
