@@ -62,6 +62,7 @@ func (a *Assignment) AddTeamToAssignment(t *Team) *Assignment {
 	}
 
 	a.Teams = append(a.Teams, t)
+	
 
 	return a
 }

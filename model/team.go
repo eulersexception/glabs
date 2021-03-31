@@ -9,16 +9,23 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+// Team - Name is the primary key. All fields are public and
+// Getter or Setter functions relate to database operations.
 type Team struct {
 	Assignment *Assignment
 	Name       string
 	Students   []*Student
 }
 
-func NewTeam(assignment *Assignment, name string) *Team {
+// NewTeam creates a new team and stores the object in DB.
+// String argument for name must not be empty.
+// If a team with given name exists already in DB, the existing dataset will be overwritten.
+// Returns a new teamo.
+func NewTeam(assignment *Assignment, name string) (*Team, string) {
+
 	if name == "" {
-		fmt.Println("Please enter a valid team name.")
-		return nil
+		res := "\n+++ Please enter a valid team name."
+		return nil, res
 	}
 
 	var students []*Student
@@ -29,40 +36,63 @@ func NewTeam(assignment *Assignment, name string) *Team {
 		Students:   students,
 	}
 
-	team.SetTeam()
+	err := team.setTeam()
 
-	return team
+	if err != nil {
+		return nil, err.Error()
+	}
+
+	return team, ""
 }
 
-func (t *Team) AddStudentToTeam(s *Student) *Team {
+func (t *Team) AddStudent(s *Student) error {
 	index := -1
 
 	for i, v := range t.Students {
 		if v.Id == s.Id {
-			if cmp.Equal(v, s) {
-				return t
-			}
-		} else {
 			index = i
+			if !cmp.Equal(v, s) {
+				t.Students[i] = s
+				err := t.UpdateTeam()
+
+				if err != nil {
+					log.Fatal(err)
+					return err
+				}
+
+				s.Team = t
+				err = s.UpdateStudent()
+
+				if err != nil {
+					log.Fatal(err)
+					return err
+				}
+			}
 		}
 	}
 
 	if index == -1 {
 		t.Students = append(t.Students, s)
-		err := DeleteTeam(t.Name)
+		err := t.UpdateTeam()
 
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
+			return err
 		}
 
-		t.SetTeam()
-		s.AddToTeam(t)
+		s.Team = t
+		err = s.UpdateStudent()
+
+		if err != nil {
+			log.Fatal(err)
+			return err
+		}
 	}
 
-	return t
+	return nil
 }
 
-func (t *Team) RemoveStudentFromTeam(s Student) *Team {
+func (t *Team) RemoveStudent(s *Student) error {
 	index := -1
 
 	for i, v := range t.Students {
@@ -72,16 +102,27 @@ func (t *Team) RemoveStudentFromTeam(s Student) *Team {
 	}
 
 	if index == -1 {
-		return t
+		return nil
 	}
 
 	t.Students[index] = t.Students[len(t.Students)-1]
 	t.Students = t.Students[:len(t.Students)-1]
-	s.Team = nil
-	s.SetStudent()
-	t.SetTeam()
+	err := t.setTeam()
 
-	return t
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+
+	s.Team = nil
+	err = s.UpdateStudent()
+
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+
+	return err
 }
 
 func (t Team) encodeTeam() []byte {
@@ -105,7 +146,23 @@ func decodeTeam(data []byte) Team {
 	return t
 }
 
-func (t Team) SetTeam() {
+// UpdateTeam changes a teams record in DB.
+// Returns an error if the update fails.
+func (t Team) UpdateTeam() error {
+	_, err := GetTeam(t.Name)
+
+	if err != nil {
+		log.Printf("\n+++ Update of team with name %s failer while checking if team exists.\n+++ %s\n", t.Name, err.Error())
+		return err
+	}
+
+	err = t.setTeam()
+
+	return err
+}
+
+// This function updates team record in DB. An update could be a creation or edition of a record.
+func (t Team) setTeam() error {
 	db, err := badger.Open(badger.DefaultOptions("tmp/badger"))
 
 	if err != nil {
@@ -113,15 +170,21 @@ func (t Team) SetTeam() {
 	}
 	defer db.Close()
 
-	err = db.Update(func(txn *badger.Txn) error {
-		e := badger.NewEntry([]byte(t.Name), []byte(t.encodeTeam()))
-		err = txn.SetEntry(e)
+	k := []byte(t.Name)
+	v := []byte(t.encodeTeam())
 
-		return err
+	err = db.Update(func(txn *badger.Txn) error {
+		e := txn.Set(k, v)
+
+		return e
 	})
+
+	return err
 }
 
-func GetTeam(name string) Team {
+// GetTeam fetches team from DB with an argument of type string as name.
+// Returns an error if fetch fails or a pointer to the Team.
+func GetTeam(name string) (*Team, error) {
 	db, err := badger.Open(badger.DefaultOptions("tmp/badger"))
 
 	if err != nil {
@@ -147,12 +210,14 @@ func GetTeam(name string) Team {
 	})
 
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return t
+	return &t, nil
 }
 
+// DeleteTeam removes a team by name (string) from DB.
+// Returns an error if operation fails.
 func DeleteTeam(name string) error {
 	db, err := badger.Open(badger.DefaultOptions("tmp/badger"))
 
@@ -170,6 +235,7 @@ func DeleteTeam(name string) error {
 	return err
 }
 
+// PrintData outputs a human readable string for team data.
 func (t Team) PrintMembers() {
 	if t.Assignment != nil {
 		fmt.Printf("Current Assignment = %s", t.Assignment.Name)
