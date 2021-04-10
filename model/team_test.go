@@ -4,7 +4,8 @@ import (
 	"log"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
+	"github.com/dgraph-io/badger/v3"
+
 )
 
 var testStarter = &StarterCode{
@@ -54,7 +55,7 @@ func TestNewTeamSuccess(t *testing.T) {
 	NewTeam(team.Assignment, team.Name)
 	got, _ := GetTeam(team.Name)
 
-	if !cmp.Equal(want, got) {
+	if !want.Equals(got) {
 		t.Errorf("Test failed, want %v but got %v", want, got)
 	}
 }
@@ -80,15 +81,47 @@ func TestGetTeam(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	if !cmp.Equal(want, got) {
+	if !want.Equals(got) {
 		t.Errorf("Test failed, want %v but got %v", want, got)
 	}
 }
 
 func TestDeleteTeam(t *testing.T) {
+	indb, _ := GetTeam(team.Name)
 	got := DeleteTeam(team.Name)
+
+	if indb == nil {
+		t.Errorf("Test failed no db entry")
+	}
 
 	if got != nil {
 		t.Errorf("Couldn't delete team %s.\nCheck error: %v", team.Name, got.Error())
+	}
+}
+
+func TestAddExistingStudent(t *testing.T) {
+	studentOne, _ := NewStudent(nil, studOne.Name, studOne.FirstName, studOne.NickName, studOne.Email, studOne.Id)
+	got, _ := NewTeam(nil, team.Name)
+	want := team
+	studOne.Team = team
+
+	want.Assignment = nil
+
+	want.Students = append(want.Students, studOne)
+	got.AddStudent(studentOne)
+
+	if len(want.Students) != len(got.Students) {
+		t.Errorf("Test failed for length comparison, want %d (number of students in team) but got %d", len(want.Students), len(got.Students))
+	}
+
+	for i, g := range got.Students {
+		w := want.Students[i]
+		if !w.Equals(g) {
+			t.Errorf("Test failed for student comparison, want:\n\tname: %s, %s //\n\tfirst: %s, %s\n\tnick: %s, %s\n\temail: %s, %s\n\tid: %d, %d\n\tteam: %s, %s", w.Name, g.Name, w.FirstName, g.FirstName, w.NickName, g.NickName, w.Email, g.Email, w.Id, g.Id, w.Team.Name, g.Team.Name)
+		}
+	}
+
+	if want.Name != got.Name {
+		t.Errorf("Test failed for id comparison, want %s but got %s", want.Name, got.Name)
 	}
 }

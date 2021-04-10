@@ -65,7 +65,7 @@ func NewAssignmentOverview(semester *glabsmodel.Semester, tc *widget.TabContaine
 func addTeams(n int, as *glabsmodel.Assignment, s *glabsmodel.Semester) {
 	for i := 0; i < n; i++ {
 		name := fmt.Sprintf("Team %d", i)
-		t := glabsmodel.NewTeam(as, name)
+		t,_ := glabsmodel.NewTeam(as, name)
 		as.AddTeamToAssignment(t)
 	}
 }

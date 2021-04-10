@@ -6,15 +6,65 @@ import (
 	"log"
 
 	"github.com/dgraph-io/badger/v3"
+	"github.com/eulersexception/glabs-ui/util"
 	"github.com/google/go-cmp/cmp"
 )
 
-// Team - Name is the primary key. All fields are public and
+// Team - Name is the primary key. All fields are public an
+
 // Getter or Setter functions relate to database operations.
 type Team struct {
 	Assignment *Assignment
 	Name       string
 	Students   []*Student
+}
+
+type JSONTeam struct {
+	AssignmentId string   `json:"assignmentid"`
+	Name         string   `json:"name"`
+	StudentIds   []uint32 `json:"studentids"`
+}
+
+func NewJSONTeam(t *Team) JSONTeam {
+	jstuds := make([]uint32, 0)
+
+	for _, v := range t.Students {
+		jstuds = append(jstuds, v.Id)
+	}
+
+	var assignmentId string
+
+	if t.Assignment == nil {
+		assignmentId = ""
+	} else {
+		assignmentId = t.Assignment.Name
+	}
+
+	return JSONTeam{
+		assignmentId,
+		t.Name,
+		jstuds,
+	}
+}
+
+func (jt JSONTeam) Team() *Team {
+	studs := make([]*Student, 0)
+
+	// for _, v := range jt.StudentIds {
+	// 	student, err := GetStudent(v)
+
+	// 	if err != nil {
+	// 		log.Fatal(err)
+	// 	}
+
+	// 	studs = append(studs, student)
+	// }
+
+	return &Team{
+		nil,
+		jt.Name,
+		studs,
+	}
 }
 
 // NewTeam creates a new team and stores the object in DB.
@@ -92,7 +142,7 @@ func (t *Team) AddStudent(s *Student) error {
 	return nil
 }
 
-func (t *Team) RemoveStudent(s *Student) error {
+func (t Team) RemoveStudent(s Student) error {
 	index := -1
 
 	for i, v := range t.Students {
@@ -125,8 +175,8 @@ func (t *Team) RemoveStudent(s *Student) error {
 	return err
 }
 
-func (t Team) encodeTeam() []byte {
-	data, err := json.Marshal(t)
+func (t *Team) encodeTeam() []byte {
+	data, err := json.Marshal(NewJSONTeam(t))
 
 	if err != nil {
 		panic(err)
@@ -135,20 +185,20 @@ func (t Team) encodeTeam() []byte {
 	return data
 }
 
-func decodeTeam(data []byte) Team {
-	var t Team
-	err := json.Unmarshal(data, &t)
+func decodeTeam(data []byte) *Team {
+	var jt JSONTeam
+	err := json.Unmarshal(data, &jt)
 
 	if err != nil {
 		panic(err)
 	}
 
-	return t
+	return jt.Team()
 }
 
 // UpdateTeam changes a teams record in DB.
 // Returns an error if the update fails.
-func (t Team) UpdateTeam() error {
+func (t *Team) UpdateTeam() error {
 	_, err := GetTeam(t.Name)
 
 	if err != nil {
@@ -162,18 +212,14 @@ func (t Team) UpdateTeam() error {
 }
 
 // This function updates team record in DB. An update could be a creation or edition of a record.
-func (t Team) setTeam() error {
-	db, err := badger.Open(badger.DefaultOptions("tmp/badger"))
-
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
+func (t *Team) setTeam() error {
+	db := util.GetDB()
+	db.Close()
 
 	k := []byte(t.Name)
 	v := []byte(t.encodeTeam())
 
-	err = db.Update(func(txn *badger.Txn) error {
+	err := db.Update(func(txn *badger.Txn) error {
 		e := txn.Set(k, v)
 
 		return e
@@ -185,16 +231,12 @@ func (t Team) setTeam() error {
 // GetTeam fetches team from DB with an argument of type string as name.
 // Returns an error if fetch fails or a pointer to the Team.
 func GetTeam(name string) (*Team, error) {
-	db, err := badger.Open(badger.DefaultOptions("tmp/badger"))
-
-	if err != nil {
-		log.Fatal(err)
-	}
+	db := util.GetDB()
 	defer db.Close()
 
-	var t Team
+	var t *Team
 
-	err = db.View(func(txn *badger.Txn) error {
+	err := db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get([]byte(name))
 
 		if err != nil {
@@ -202,6 +244,7 @@ func GetTeam(name string) (*Team, error) {
 		}
 
 		err = item.Value(func(val []byte) error {
+			// TODO: implement third parameter assignment name
 			t = decodeTeam(val)
 			//fmt.Println(fmt.Sprintf("Key = %s, Value = %s", item.String(), string(val)))
 			return err
@@ -213,20 +256,16 @@ func GetTeam(name string) (*Team, error) {
 		return nil, err
 	}
 
-	return &t, nil
+	return t, nil
 }
 
 // DeleteTeam removes a team by name (string) from DB.
 // Returns an error if operation fails.
 func DeleteTeam(name string) error {
-	db, err := badger.Open(badger.DefaultOptions("tmp/badger"))
-
-	if err != nil {
-		log.Fatal(err)
-	}
+	db := util.GetDB()
 	defer db.Close()
 
-	err = db.Update(func(txn *badger.Txn) error {
+	err := db.Update(func(txn *badger.Txn) error {
 		e := txn.Delete([]byte(name))
 
 		return e
@@ -246,4 +285,23 @@ func (t Team) PrintMembers() {
 	for _, v := range t.Students {
 		fmt.Printf("Member: %s\n", v.NickName)
 	}
+}
+
+func (fst *Team) Equals(scd *Team) bool {
+	if scd == nil {
+		return false
+	}
+
+	if fst.Name != scd.Name || len(fst.Students) != len(scd.Students) {
+		return false
+	}
+
+	for i, f := range fst.Students {
+		s := scd.Students[i]
+		if !f.Equals(s) {
+			return false
+		}
+	}
+
+	return true
 }

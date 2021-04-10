@@ -64,7 +64,8 @@ func addStudents(n int, t *glabsmodel.Team) {
 	for i := 0; i < n; i++ {
 		nick := fmt.Sprintf("max_payne_%d", i)
 		mail := fmt.Sprintf("einsteinNo_%d_@fantasiaschool.edu", i)
-		s := glabsmodel.NewStudent(t, "Mustermann", fmt.Sprintf("Max der %d.", i), nick, mail, uint32(i))
-		t.AddStudentToTeam(s)
+		s, _ := glabsmodel.NewStudent(t, "Mustermann", fmt.Sprintf("Max der %d.", i), nick, mail, uint32(i))
+		//t.AddStudentToTeam(s)
+		s.PrintData()
 	}
 }

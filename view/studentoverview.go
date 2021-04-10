@@ -38,7 +38,7 @@ func NewStudentOverview(team *glabsmodel.Team, tc *widget.TabContainer) *Student
 				NickName:  v.NickName,
 				Email:     v.Email,
 			}
-			currentStudent.Mail(v.GetMail())
+			currentStudent.Email = v.GetMail()
 
 			button := widget.NewButton("Details", func() {
 				tc.Append(widget.NewTabItem(currentStudent.NickName, NewStudentDetailView(currentStudent, tc).Container))

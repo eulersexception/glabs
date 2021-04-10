@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -16,7 +17,7 @@ var stud = &Student{
 
 var studs = make([]*Student, 0)
 
-var t = &Team{
+var teamOne = &Team{
 	Name:       "TestTeam",
 	Assignment: nil,
 	Students:   studs,
@@ -25,11 +26,7 @@ var t = &Team{
 func TestNewStudent(t *testing.T) {
 	want := stud
 	NewStudent(nil, want.Name, want.FirstName, want.NickName, want.Email, want.Id)
-	got, err := GetStudent(want.Id)
-
-	if err != nil {
-		t.Errorf("Test failed while fetching data.")
-	}
+	got, _ := GetStudent(want.Id)
 
 	if !cmp.Equal(want, got) {
 		t.Errorf("NewStudent:\nName = '%s', want 'Muster'\nFirstName = '%s', want 'Max'\nNickname = '%s', want 'Eminem'\nEmail = '%s', want 'mm@example.com'\nId = %d, want 9999\n", got.Name, got.FirstName, got.NickName, got.Email, got.Id)
@@ -83,6 +80,12 @@ func TestDeleteStudent(t *testing.T) {
 	if got != nil {
 		t.Errorf("Expected nil error as result of delete operation but got %v", got.Error())
 	}
+
+	sGot, err := GetStudent(stud.Id)
+
+	if sGot != nil || err == nil {
+		t.Errorf("Expected nil after student deletion but got %v", sGot)
+	}
 }
 
 func TestUpdateStudent(t *testing.T) {
@@ -107,23 +110,39 @@ func TestUpdateStudent(t *testing.T) {
 		t.Errorf("Test failed while fetching data after update due to %v", e.Error())
 	}
 
-	if !cmp.Equal(want, got) {
+	if !want.Equals(got) {
 		t.Errorf("Want %v but got %v", want, got)
 	}
 }
 
 func TestJoinTeam(t *testing.T) {
-	want := t
-	team, _ := NewTeam(nil, "TestTeam")
+	localStuds := make([]*Student, 0)
+	localStuds = append(localStuds, stud)
 
-	stud.JoinTeam(team.Name)
-	got, _ := GetTeam(team.Name)
+	localStud, _ := NewStudent(nil, stud.Name, stud.FirstName, stud.NickName, stud.Email, 9998)
 
-	if !cmp.Equal(want, team) {
-		t.Errorf("Test failed, want %v but got %v", want, got)
+	want := &Team{
+		Name:       "TestTeamJoin",
+		Assignment: nil,
+		Students:   localStuds,
 	}
 
-	DeleteTeam(team.Name)
+	fmt.Println("-------- TestJoinTeam before creating new team")
+	got, _ := NewTeam(nil, "TestTeamJoin")
+
+	fmt.Printf("-------- Got name = %v\n", got)
+	localStud.JoinTeam(got.Name)
+	g, _ := GetTeam("TestTeamJoin")
+
+	if !want.Equals(g) && g.Name != "TestTeamJoin" {
+		t.Errorf("Test failed, want %v but got %v", want, g)
+	}
+
+	if !localStud.Equals(stud) {
+		t.Errorf("Test failed, want %v but got %v", stud, localStud)
+	}
+
+	// DeleteTeam(team.Name)
 }
 
 func TestMailValid(t *testing.T) {
