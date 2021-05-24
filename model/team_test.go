@@ -1,11 +1,12 @@
 package model
 
 import (
-	"log"
 	"testing"
 
-	"github.com/dgraph-io/badger/v3"
+	"github.com/eulersexception/glabs-ui/util"
+	"github.com/google/go-cmp/cmp"
 
+	DB "modernc.org/ql"
 )
 
 var testStarter = &StarterCode{
@@ -19,109 +20,73 @@ var testClone = &Clone{
 	Branch:    "master",
 }
 
-var testAssignment = &Assignment{
-	Name:              "TestAssignment",
-	Semester:          nil,
-	Teams:             nil,
-	LocalClone:        testClone,
-	Starter:           testStarter,
-	ContainerRegistry: true,
-}
+var testAssignment = &Assignment{}
 
-var team = &Team{
-	Name:       "TestTeam",
-	Assignment: testAssignment,
-	Students:   nil,
-}
+var team = &Team{}
 
 var studOne = &Student{
-	Name:      "Minogue",
-	FirstName: "Kylie",
-	NickName:  "kymi",
-	Email:     "kymi@example.com",
-	Id:        10000,
+	Name:       "Minogue",
+	FirstName:  "Kylie",
+	NickName:   "kymi",
+	Email:      "kymi@example.com",
+	MatrikelNr: 10000,
 }
 
 var studTwo = &Student{
-	Name:      "Simone",
-	FirstName: "Nina",
-	NickName:  "nisi",
-	Email:     "nisi@example.com",
-	Id:        10001,
+	Name:       "Simone",
+	FirstName:  "Nina",
+	NickName:   "nisi",
+	Email:      "nisi@example.com",
+	MatrikelNr: 10001,
 }
 
 func TestNewTeamSuccess(t *testing.T) {
-	want := team
-	NewTeam(team.Assignment, team.Name)
-	got, _ := GetTeam(team.Name)
+	want := &Team{Name: "TestTeam1"}
 
-	if !want.Equals(got) {
-		t.Errorf("Test failed, want %v but got %v", want, got)
+	NewTeam("TestTeam1")
+
+	got := GetTeam("TestTeam1")
+
+	if !cmp.Equal(want, got) {
+		t.Errorf("NewTeam:\nName = '%s', want '%s'\n",
+			got.Name, want.Name)
 	}
 }
 
 func TestNewTeamFail(t *testing.T) {
 	want := "\n+++ Please enter a valid team name."
-	team, got := NewTeam(nil, "")
 
-	if want != got {
-		t.Errorf("Test failed, expected %s but got %s", want, got)
-	}
+	gotTeam, got := NewTeam("")
 
-	if team != nil {
-		t.Errorf("Expected result to be nil due to missing team name")
-	}
-}
-
-func TestGetTeam(t *testing.T) {
-	want := team
-	got, err := GetTeam(team.Name)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if !want.Equals(got) {
-		t.Errorf("Test failed, want %v but got %v", want, got)
+	if gotTeam != nil || want != got {
+		t.Errorf("Expected error message '%s', got a value %v", want, gotTeam)
 	}
 }
 
 func TestDeleteTeam(t *testing.T) {
-	indb, _ := GetTeam(team.Name)
-	got := DeleteTeam(team.Name)
+	want := 1
 
-	if indb == nil {
-		t.Errorf("Test failed no db entry")
+	NewTeam("TestTeam2")
+	DeleteTeam("TestTeam2")
+
+	db := util.GetDB()
+	defer util.FlushAndClose(db)
+
+	got, _, err := db.Run(DB.NewRWCtx(), `
+			BEGIN TRANSACTION;
+				SELECT count(*) FROM Team WHERE TeamName = $1;
+			COMMIT;
+	`, "TestTeam2")
+
+	if err != nil {
+		panic(err)
 	}
 
-	if got != nil {
-		t.Errorf("Couldn't delete team %s.\nCheck error: %v", team.Name, got.Error())
+	if len(got) != want {
+		t.Errorf("Expected %d row with column headers, %d rows", want, len(got))
 	}
 }
 
 func TestAddExistingStudent(t *testing.T) {
-	studentOne, _ := NewStudent(nil, studOne.Name, studOne.FirstName, studOne.NickName, studOne.Email, studOne.Id)
-	got, _ := NewTeam(nil, team.Name)
-	want := team
-	studOne.Team = team
 
-	want.Assignment = nil
-
-	want.Students = append(want.Students, studOne)
-	got.AddStudent(studentOne)
-
-	if len(want.Students) != len(got.Students) {
-		t.Errorf("Test failed for length comparison, want %d (number of students in team) but got %d", len(want.Students), len(got.Students))
-	}
-
-	for i, g := range got.Students {
-		w := want.Students[i]
-		if !w.Equals(g) {
-			t.Errorf("Test failed for student comparison, want:\n\tname: %s, %s //\n\tfirst: %s, %s\n\tnick: %s, %s\n\temail: %s, %s\n\tid: %d, %d\n\tteam: %s, %s", w.Name, g.Name, w.FirstName, g.FirstName, w.NickName, g.NickName, w.Email, g.Email, w.Id, g.Id, w.Team.Name, g.Team.Name)
-		}
-	}
-
-	if want.Name != got.Name {
-		t.Errorf("Test failed for id comparison, want %s but got %s", want.Name, got.Name)
-	}
 }
