@@ -26,21 +26,13 @@ func NewTeam(name string) (*Team, string) {
 	}
 
 	db := util.GetDB()
-
 	schema := DB.MustSchema((*Team)(nil), "", nil)
 
 	if _, _, e := db.Execute(DB.NewRWCtx(), schema); e != nil {
 		panic(e)
 	}
 
-	schema = DB.MustSchema((*StudentTeam)(nil), "", nil)
-
-	if _, _, e := db.Execute(DB.NewRWCtx(), schema); e != nil {
-		panic(e)
-	}
-
-	db.Flush()
-	db.Close()
+	util.FlushAndClose(db)
 
 	team := &Team{
 		Name: name,
@@ -126,7 +118,6 @@ func GetTeam(name string) *Team {
 			}
 
 			return true, nil
-
 		}); err != nil {
 			panic(err)
 		}
@@ -148,10 +139,6 @@ func DeleteTeam(name string) {
 	`, name); err != nil {
 		panic(err)
 	}
-}
-
-// PrintData outputs a human readable string for team data.
-func (t Team) PrintMembers() {
 }
 
 func (fst *Team) Equals(scd *Team) bool {

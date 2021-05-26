@@ -3,42 +3,8 @@ package model
 import (
 	"testing"
 
-	"github.com/eulersexception/glabs-ui/util"
 	"github.com/google/go-cmp/cmp"
-
-	DB "modernc.org/ql"
 )
-
-var testStarter = &StarterCode{
-	Url:             "www.test.com",
-	FromBranch:      "develop",
-	ProtectToBranch: true,
-}
-
-var testClone = &Clone{
-	LocalPath: "local",
-	Branch:    "master",
-}
-
-var testAssignment = &Assignment{}
-
-var team = &Team{}
-
-var studOne = &Student{
-	Name:       "Minogue",
-	FirstName:  "Kylie",
-	NickName:   "kymi",
-	Email:      "kymi@example.com",
-	MatrikelNr: 10000,
-}
-
-var studTwo = &Student{
-	Name:       "Simone",
-	FirstName:  "Nina",
-	NickName:   "nisi",
-	Email:      "nisi@example.com",
-	MatrikelNr: 10001,
-}
 
 func TestNewTeamSuccess(t *testing.T) {
 	want := &Team{Name: "TestTeam1"}
@@ -48,8 +14,7 @@ func TestNewTeamSuccess(t *testing.T) {
 	got := GetTeam("TestTeam1")
 
 	if !cmp.Equal(want, got) {
-		t.Errorf("NewTeam:\nName = '%s', want '%s'\n",
-			got.Name, want.Name)
+		t.Errorf("want = %v, got = %v\n", want, got)
 	}
 }
 
@@ -59,31 +24,21 @@ func TestNewTeamFail(t *testing.T) {
 	gotTeam, got := NewTeam("")
 
 	if gotTeam != nil || want != got {
-		t.Errorf("Expected error message '%s', got a value %v", want, gotTeam)
+		t.Errorf("want = '%s', got = '%s'\n", want, got)
 	}
 }
 
 func TestDeleteTeam(t *testing.T) {
-	want := 1
+	team := &Team{Name: "TestTeam2"}
 
-	NewTeam("TestTeam2")
-	DeleteTeam("TestTeam2")
+	NewTeam(team.Name)
+	DeleteTeam(team.Name)
 
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	want := &Team{}
+	got := GetTeam(team.Name)
 
-	got, _, err := db.Run(DB.NewRWCtx(), `
-			BEGIN TRANSACTION;
-				SELECT count(*) FROM Team WHERE TeamName = $1;
-			COMMIT;
-	`, "TestTeam2")
-
-	if err != nil {
-		panic(err)
-	}
-
-	if len(got) != want {
-		t.Errorf("Expected %d row with column headers, %d rows", want, len(got))
+	if !cmp.Equal(want, got) {
+		t.Errorf("want = %v, got %v", want, got)
 	}
 }
 
