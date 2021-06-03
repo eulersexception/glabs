@@ -11,8 +11,8 @@ import (
 // Student - Id (Matrikelnummer) is the primary key. All fields are public and
 // Getter or Setter functions relate to database operations.
 type Student struct {
-	StudentID  *int64 `ql:"index xID"`
-	MatrikelNr int64  `ql:"uindex xMatrikelNr"`
+	StudentID  int64 `ql:"index xID"`
+	MatrikelNr int64 `ql:"uindex xMatrikelNr"`
 	Name       string
 	FirstName  string
 	NickName   string
@@ -100,7 +100,7 @@ func GetStudent(matrikelNr int64) *Student {
 
 	rss, _, err := db.Run(DB.NewRWCtx(), `
 			BEGIN TRANSACTION;
-				SELECT StudentID, MatrikelNr, Name, FirstName, NickName, Email FROM Student
+				SELECT id(), MatrikelNr, Name, FirstName, NickName, Email FROM Student
 				WHERE MatrikelNr = $1;
 			COMMIT;
 		`, matrikelNr)

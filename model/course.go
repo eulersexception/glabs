@@ -5,7 +5,7 @@ import (
 )
 
 type Course struct {
-	CourseID    *int64 `ql:"index xID"`
+	CourseID    int64  `ql:"index xID"`
 	Name        string `ql:"uindex xName, name CourseName"`
 	Description string
 }

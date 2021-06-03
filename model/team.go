@@ -11,7 +11,7 @@ import (
 
 // Getter or Setter functions relate to database operations.
 type Team struct {
-	TeamID *int64 `ql:"index xID"`
+	TeamID int64  `ql:"index xID"`
 	Name   string `ql:"uindex xName, name TeamName"`
 }
 
@@ -95,11 +95,11 @@ func GetTeam(name string) *Team {
 	db := util.GetDB()
 	defer util.FlushAndClose(db)
 
-	t := &Team{Name: name}
+	//t := &Team{Name: name}
 
 	rss, _, err := db.Run(DB.NewRWCtx(), `
 				BEGIN TRANSACTION;
-					SELECT TeamID, TeamName FROM Team WHERE TeamName = $1;
+					SELECT id(), TeamName FROM Team WHERE TeamName = $1;
 				COMMIT;
 			`, name)
 
@@ -107,7 +107,7 @@ func GetTeam(name string) *Team {
 		panic(err)
 	}
 
-	t = &Team{}
+	t := &Team{}
 
 	for _, rs := range rss {
 

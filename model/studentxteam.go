@@ -43,18 +43,18 @@ func createNewEntry(matrikelNr int64, teamName string) {
 	}
 }
 
-func GetTeamsForStudent(matrikelNr int64) []Team {
+func GetTeamsForStudent(matrikelNr int64) []*Team {
 	db := util.GetDB()
 
 	rss, _, err := db.Run(DB.NewRWCtx(), `
-			SELECT * FROM StudentTeam WHERE MatrikelNr = $1
+			SELECT MatrikelTeam, MatrikelNr, TeamName FROM StudentTeam WHERE MatrikelNr = $1;
 		`, matrikelNr)
 
 	if err != nil {
 		panic(err)
 	}
 
-	entries := make([]*StudentTeam, 0)
+	entries := make([]StudentTeam, 0)
 
 	for _, rs := range rss {
 		s := &StudentTeam{}
@@ -65,7 +65,7 @@ func GetTeamsForStudent(matrikelNr int64) []Team {
 				return false, err
 			}
 
-			entries = append(entries, s)
+			entries = append(entries, *s)
 			return true, nil
 		}); e != nil {
 			panic(e)
@@ -74,10 +74,10 @@ func GetTeamsForStudent(matrikelNr int64) []Team {
 
 	util.FlushAndClose(db)
 
-	teams := make([]Team, 0)
+	teams := make([]*Team, 0)
 
 	for _, v := range entries {
-		teams = append(teams, *GetTeam(v.TeamName))
+		teams = append(teams, GetTeam(v.TeamName))
 	}
 
 	return teams

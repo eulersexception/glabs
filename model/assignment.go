@@ -107,7 +107,6 @@ func GetAssignment(name string) *Assignment {
 	for _, rs := range rss {
 
 		if err := rs.Do(false, func(data []interface{}) (bool, error) {
-
 			if e := DB.Unmarshal(a, data); e != nil {
 				return false, e
 			}

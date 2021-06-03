@@ -17,7 +17,9 @@ var stud = &Student{
 func TestNewStudent(t *testing.T) {
 	want := stud
 	NewStudent(want.Name, want.FirstName, want.NickName, want.Email, want.MatrikelNr)
+
 	got := GetStudent(want.MatrikelNr)
+	want.StudentID = got.StudentID
 
 	if !cmp.Equal(want, got) {
 		t.Errorf("want = '%v', got = '%v'\n", want, got)
@@ -26,6 +28,7 @@ func TestNewStudent(t *testing.T) {
 
 func TestNewStudentFailMissingName(t *testing.T) {
 	want := "\n+++ Please provide valid name or first name.\n"
+
 	_, got := NewStudent("", stud.FirstName, stud.NickName, stud.Email, stud.MatrikelNr)
 
 	if want != got {
@@ -35,6 +38,7 @@ func TestNewStudentFailMissingName(t *testing.T) {
 
 func TestNewStudentFailMissingFirstName(t *testing.T) {
 	want := "\n+++ Please provide valid name or first name.\n"
+
 	_, got := NewStudent(stud.Name, "", stud.NickName, stud.Email, stud.MatrikelNr)
 
 	if want != got {
@@ -72,6 +76,7 @@ func TestUpdateStudent(t *testing.T) {
 	want.UpdateStudent()
 
 	got := GetStudent(want.MatrikelNr)
+	want.StudentID = got.StudentID
 
 	if !cmp.Equal(want, got) {
 		t.Errorf("want = '%v', got = '%v'\n", want, got)

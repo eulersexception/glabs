@@ -3,7 +3,7 @@ package model
 import "fmt"
 
 type Semester struct {
-	SemesterID *int64  `ql:"index xID"`
+	SemesterID int64   `ql:"index xID"`
 	Name       string  `ql:"uindex xName, name SemesterName"`
 	Course     *Course `ql:"CourseName"`
 }

@@ -12,6 +12,7 @@ func TestNewTeamSuccess(t *testing.T) {
 	NewTeam("TestTeam1")
 
 	got := GetTeam("TestTeam1")
+	want.TeamID = got.TeamID
 
 	if !cmp.Equal(want, got) {
 		t.Errorf("want = %v, got = %v\n", want, got)
