@@ -21,7 +21,8 @@ func NewStudentTeam(matrikelNr int64, teamName string) {
 
 	_, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
-			INSERT INTO StudentTeam IF NOT EXISTS (MatrikelTeam, MatrikelNr, TeamName) VALUES ($1, $2, $3);
+			INSERT INTO StudentTeam IF NOT EXISTS (MatrikelTeam, MatrikelNr, TeamName) 
+			VALUES ($1, $2, $3);
 		COMMIT;
 	`, id, matrikelNr, teamName)
 
@@ -34,7 +35,9 @@ func GetTeamsForStudent(matrikelNr int64) []*Team {
 	db := util.GetDB()
 
 	rss, _, err := db.Run(DB.NewRWCtx(), `
-			SELECT MatrikelTeam, MatrikelNr, TeamName FROM StudentTeam WHERE MatrikelNr = $1;
+			SELECT MatrikelTeam, MatrikelNr, TeamName 
+			FROM StudentTeam 
+			WHERE MatrikelNr = $1;
 		`, matrikelNr)
 
 	if err != nil {
@@ -74,7 +77,9 @@ func GetStudentsForTeam(team string) []*Student {
 	db := util.GetDB()
 
 	rss, _, err := db.Run(DB.NewRWCtx(), `
-			SELECT MatrikelTeam, MatrikelNr, TeamName FROM StudentTeam WHERE TeamName = $1;
+			SELECT MatrikelTeam, MatrikelNr, TeamName 
+			FROM StudentTeam 
+			WHERE TeamName = $1;
 		`, team)
 
 	if err != nil {
@@ -112,16 +117,16 @@ func GetStudentsForTeam(team string) []*Student {
 
 func RemoveStudentFromTeam(matrikelNr int64, team string) {
 	db := util.GetDB()
+	defer util.FlushAndClose(db)
 
 	_, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
-			DELETE FROM StudentTeam WHERE MatrikelNr = $1 AND TeamName = $2;
+			DELETE FROM StudentTeam 
+			WHERE MatrikelNr = $1 AND TeamName = $2;
 		COMMIT;
 	`, matrikelNr, team)
 
 	if err != nil {
 		panic(err)
 	}
-
-	util.FlushAndClose(db)
 }

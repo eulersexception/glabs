@@ -134,6 +134,7 @@ func GetAssignment(path string) *Assignment {
 	for _, rs := range rss {
 
 		if err := rs.Do(false, func(data []interface{}) (bool, error) {
+
 			if e := DB.Unmarshal(a, data); e != nil {
 				return false, e
 			}
@@ -155,13 +156,14 @@ func DeleteAssignment(path string) {
 	if _, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
 			DELETE FROM Assignment WHERE AssignmentPath = $1;
+			DELETE FROM TeamAssignment WHERE AssignmentPath = $1;
 		COMMIT;
 	`, path); err != nil {
 		panic(err)
 	}
 }
 
-func (a *Assignment) UpdateAssignment() bool {
+func (a *Assignment) UpdateAssignment() {
 	db := util.GetDB()
 	defer util.FlushAndClose(db)
 
@@ -174,8 +176,6 @@ func (a *Assignment) UpdateAssignment() bool {
 	`, a.AssignmentPath, a.SemesterPath, a.Per, a.Description, a.ContainerRegistry, a.LocalPath, a.StarterUrl); err != nil {
 		panic(err)
 	}
-
-	return true
 }
 
 func (s StarterCode) setStarterCode() {
@@ -191,6 +191,74 @@ func (s StarterCode) setStarterCode() {
 	}
 }
 
+func GetStarterCode(url string) *StarterCode {
+	db := util.GetDB()
+	defer util.FlushAndClose(db)
+
+	rss, _, err := db.Run(DB.NewRWCtx(), `
+			BEGIN TRANSACTION;
+					SELECT * FROM StarterCode
+					WHERE  Url = $1;
+				COMMIT;
+			`, url)
+
+	if err != nil {
+		panic(err)
+	}
+
+	s := &StarterCode{}
+
+	for _, rs := range rss {
+
+		if err := rs.Do(false, func(data []interface{}) (bool, error) {
+
+			if e := DB.Unmarshal(s, data); e != nil {
+				return false, e
+			}
+
+			return true, nil
+		}); err != nil {
+			panic(err)
+		}
+	}
+
+	return s
+}
+
+func DeleteStarterCode(url string) {
+	db := util.GetDB()
+	defer util.FlushAndClose(db)
+
+	if _, _, err := db.Run(DB.NewRWCtx(), `
+		BEGIN TRANSACTION;
+			DELETE FROM StarterCode WHERE Url = $1;
+		COMMIT;
+	`, url); err != nil {
+		panic(err)
+	}
+}
+
+func (s *StarterCode) UpdateStarterCode() {
+	db := util.GetDB()
+	defer util.FlushAndClose(db)
+
+	_, _, err := db.Run(DB.NewRWCtx(), `
+			BEGIN TRANSACTION;
+				UPDATE StarterCode
+					FromBranch = $2, ProtectToBranch = $3
+					WHERE Url = $1;
+			COMMIT;
+	`, s.Url, s.FromBranch, s.ProtectToBranch)
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (s StarterCode) toString() string {
+	return fmt.Sprintf("\tStarterCode:\n\t\tUrl:\t%s\n\t\tFromBranch:\t%s\n\t\tProtectToBranch:\t%v", s.Url, s.FromBranch, s.ProtectToBranch)
+}
+
 func (c Clone) setClone() {
 	db := util.GetDB()
 	defer util.FlushAndClose(db)
@@ -204,8 +272,68 @@ func (c Clone) setClone() {
 	}
 }
 
-func (s StarterCode) toString() string {
-	return fmt.Sprintf("\tStarterCode:\n\t\tUrl:\t%s\n\t\tFromBranch:\t%s\n\t\tProtectToBranch:\t%v", s.Url, s.FromBranch, s.ProtectToBranch)
+func GetClone(localPath string) *Clone {
+	db := util.GetDB()
+	defer util.FlushAndClose(db)
+
+	rss, _, err := db.Run(DB.NewRWCtx(), `
+				BEGIN TRANSACTION;
+					SELECT * FROM Clone
+					WHERE  LocalPath = $1;
+				COMMIT;
+			`, localPath)
+
+	if err != nil {
+		panic(err)
+	}
+
+	c := &Clone{}
+
+	for _, rs := range rss {
+
+		if err := rs.Do(false, func(data []interface{}) (bool, error) {
+
+			if e := DB.Unmarshal(c, data); e != nil {
+				return false, e
+			}
+
+			return true, nil
+		}); err != nil {
+			panic(err)
+		}
+	}
+
+	return c
+}
+
+func DeleteClone(localPath string) {
+	db := util.GetDB()
+	defer util.FlushAndClose(db)
+
+	if _, _, err := db.Run(DB.NewRWCtx(), `
+		BEGIN TRANSACTION;
+			DELETE FROM Clone WHERE LocalPath = $1;
+		COMMIT;
+	`, localPath); err != nil {
+		panic(err)
+	}
+}
+
+func (c *Clone) UpdateClone() {
+	db := util.GetDB()
+	defer util.FlushAndClose(db)
+
+	_, _, err := db.Run(DB.NewRWCtx(), `
+			BEGIN TRANSACTION;
+				UPDATE Clone
+					Branch = $1 
+					WHERE LocalPath = $2;
+			COMMIT;
+	`, c.Branch, c.LocalPath)
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (c Clone) toString() string {

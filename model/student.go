@@ -78,7 +78,8 @@ func (s *Student) setStudent() {
 
 	_, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
-			INSERT INTO Student IF NOT EXISTS (MatrikelNr, Name, FirstName, NickName, Email) VALUES ($1, $2, $3, $4, $5);
+			INSERT INTO Student IF NOT EXISTS (MatrikelNr, Name, FirstName, NickName, Email) 
+			VALUES ($1, $2, $3, $4, $5);
 		COMMIT;
 		`, s.MatrikelNr, s.Name, s.FirstName, s.NickName, s.Email)
 
@@ -97,7 +98,8 @@ func GetStudent(matrikelNr int64) *Student {
 
 	rss, _, err := db.Run(DB.NewRWCtx(), `
 			BEGIN TRANSACTION;
-				SELECT id(), MatrikelNr, Name, FirstName, NickName, Email FROM Student
+				SELECT id(), MatrikelNr, Name, FirstName, NickName, Email 
+				FROM Student
 				WHERE MatrikelNr = $1;
 			COMMIT;
 		`, matrikelNr)
@@ -144,7 +146,7 @@ func DeleteStudent(matrikelNr int64) {
 
 // UpdateStudent changes a students record in DB.
 // Returns an error if the update fails.
-func (s *Student) UpdateStudent() bool {
+func (s *Student) UpdateStudent() {
 	db := util.GetDB()
 	defer util.FlushAndClose(db)
 
@@ -157,8 +159,6 @@ func (s *Student) UpdateStudent() bool {
 	`, s.Name, s.FirstName, s.NickName, s.Email, s.MatrikelNr); err != nil {
 		panic(err)
 	}
-
-	return true
 }
 
 // PrintData outputs a human readable string for students data.

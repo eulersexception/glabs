@@ -46,6 +46,12 @@ func CreateTables() {
 		panic(e)
 	}
 
+	schemaTeamAssignment := DB.MustSchema((*TeamAssignment)(nil), "", nil)
+
+	if _, _, e := db.Execute(DB.NewRWCtx(), schemaTeamAssignment); e != nil {
+		panic(e)
+	}
+
 	//schemaSemester := DB.MustSchema((*Semester)(nil), "", nil)
 	//schemaCourse := DB.MustSchema((*Course)(nil), "", nil)
 }

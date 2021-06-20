@@ -53,7 +53,7 @@ func (t Team) RemoveStudent(s Student) {
 
 // UpdateTeam changes a teams record in DB.
 // Returns an error if the update fails.
-func (t *Team) UpdateTeam(newName string) bool {
+func (t *Team) UpdateTeam(newName string) {
 	db := util.GetDB()
 	defer util.FlushAndClose(db)
 
@@ -65,8 +65,6 @@ func (t *Team) UpdateTeam(newName string) bool {
 	`, newName, t.Name); err != nil {
 		panic(err)
 	}
-
-	return true
 }
 
 // This function updates team record in DB.
@@ -135,6 +133,7 @@ func DeleteTeam(name string) {
 		BEGIN TRANSACTION;
 			DELETE FROM Team WHERE TeamName = $1;
 			DELETE FROM StudentTeam WHERE TeamName = $1;
+			DELETE FROM TeamAssignment WHERE TeamName = $1;
 		COMMIT;
 	`, name); err != nil {
 		panic(err)
@@ -147,4 +146,8 @@ func (fst *Team) Equals(scd *Team) bool {
 	}
 
 	return true
+}
+
+func (t Team) JoinAssignment(assignmentPath string) {
+	NewTeamAssignment(t.Name, assignmentPath)
 }
