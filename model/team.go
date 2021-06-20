@@ -3,6 +3,8 @@ package model
 import (
 	"fmt"
 
+	"github.com/google/go-cmp/cmp"
+
 	util "github.com/eulersexception/glabs-ui/util"
 	DB "modernc.org/ql"
 )
@@ -25,14 +27,12 @@ func NewTeam(name string) (*Team, string) {
 		return nil, res
 	}
 
-	db := util.GetDB()
-	schema := DB.MustSchema((*Team)(nil), "", nil)
+	existing := GetTeam(name)
+	empty := &Team{}
 
-	if _, _, e := db.Execute(DB.NewRWCtx(), schema); e != nil {
-		panic(e)
+	if !cmp.Equal(existing, empty) {
+		return existing, "Team already exists - use update for changes"
 	}
-
-	util.FlushAndClose(db)
 
 	team := &Team{
 		Name: name,
@@ -43,14 +43,12 @@ func NewTeam(name string) (*Team, string) {
 	return team, ""
 }
 
-func (t *Team) AddStudent(s *Student) error {
-
-	return nil
+func (t *Team) AddStudent(s *Student) {
+	NewStudentTeam(s.MatrikelNr, t.Name)
 }
 
-func (t Team) RemoveStudent(s Student) error {
-
-	return nil
+func (t Team) RemoveStudent(s Student) {
+	RemoveStudentFromTeam(s.MatrikelNr, t.Name)
 }
 
 // UpdateTeam changes a teams record in DB.
@@ -62,6 +60,7 @@ func (t *Team) UpdateTeam(newName string) bool {
 	if _, _, err := db.Run(DB.NewRWCtx(), `
 			BEGIN TRANSACTION;
 				UPDATE Team	TeamName = $1 WHERE TeamName = $2;
+				UPDATE StudentTeam IF EXISTS TeamName = $1 WHERE TeamName = $2;
 			COMMIT;
 	`, newName, t.Name); err != nil {
 		panic(err)
@@ -134,7 +133,8 @@ func DeleteTeam(name string) {
 
 	if _, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
-			DELETE FROM Team WHERE TeamName == $1;
+			DELETE FROM Team WHERE TeamName = $1;
+			DELETE FROM StudentTeam WHERE TeamName = $1;
 		COMMIT;
 	`, name); err != nil {
 		panic(err)

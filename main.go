@@ -27,7 +27,21 @@ func main() {
 	teams := model.GetTeamsForStudent(s1.MatrikelNr)
 
 	for _, v := range teams {
-		fmt.Printf("main.go 27 = %v\n", v)
+		fmt.Printf("teams - main.go 27 = %v\n", v)
 	}
 
+	studs := model.GetStudentsForTeam(t1.Name)
+
+	for _, v := range studs {
+		fmt.Printf("students - main.go 36 = %v\n", v)
+	}
+
+	model.DeleteStudent(s1.MatrikelNr)
+
+	teams = model.GetTeamsForStudent(s1.MatrikelNr)
+
+	fmt.Println("Teams array after deleting s1")
+	for _, v := range teams {
+		fmt.Printf("teams - main.go 34 = %v\n", v)
+	}
 }

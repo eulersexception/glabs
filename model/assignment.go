@@ -8,66 +8,95 @@ import (
 	util "github.com/eulersexception/glabs-ui/util"
 )
 
+type Assignment struct {
+	AssignmentID      *int64 `ql:"index xID"`
+	AssignmentPath    string `ql:"uindex xAssignmentPath"`
+	SemesterPath      string
+	Per               string
+	Description       string
+	ContainerRegistry bool
+	LocalPath         string
+	StarterUrl        string
+}
+
 type StarterCode struct {
-	Url             string
+	StarterCodeID   *int64 `ql:"index xID"`
+	Url             string `ql:"uindex xUrl"`
 	FromBranch      string
 	ProtectToBranch bool
 }
 
-func (s StarterCode) toString() string {
-	return fmt.Sprintf("\tStarterCode:\n\t\tUrl:\t%s\n\t\tFromBranch:\t%s\n\t\tProtectToBranch:\t%v", s.Url, s.FromBranch, s.ProtectToBranch)
-}
-
 type Clone struct {
-	LocalPath string
+	CloneID   *int64 `ql:"index xID"`
+	LocalPath string `ql:"uindex xLocalPath"`
 	Branch    string
 }
 
-func (c Clone) toString() string {
-	return fmt.Sprintf("\tClone:\n\t\tLocalPath:\t%s\n\t\tBranch:\t%s", c.LocalPath, c.Branch)
-}
+func NewAssignment(assignmentPath string, sem string, per string,
+	desc string, conRegistry bool, localPath string,
+	branch string, starterUrl string, fromBranch string,
+	protectToBranch bool) (*Assignment, string) {
 
-type Assignment struct {
-	AssignmentID      *int64       `ql:"index xID"`
-	Name              string       `ql:"uindex xName, name AssignmentName"`
-	Semester          string       `ql:"name SemesterName"`
-	LocalClone        *Clone       `ql:"-"`
-	Starter           *StarterCode `ql:"-"`
-	ContainerRegistry bool         `ql:"-"`
-}
-
-func NewAssignment(name string, sem string, clone *Clone, starter *StarterCode) *Assignment {
-	if name == "" {
-		fmt.Println("Please enter a valid assignment name.")
-		return nil
+	if assignmentPath == "" {
+		return nil, "Please enter valid assignment path."
 	}
 
 	if sem == "" {
-		fmt.Println("Please enter a valid semester name.")
-		return nil
+		return nil, "Please enter valid semester path."
 	}
 
-	db := util.GetDB()
-
-	schema := DB.MustSchema((*Assignment)(nil), "", nil)
-
-	if _, _, e := db.Execute(DB.NewRWCtx(), schema); e != nil {
-		panic(e)
+	if per == "" {
+		return nil, "Please enter valid per."
 	}
 
-	db.Flush()
-	db.Close()
+	if desc == "" {
+		return nil, "Please enter valid description."
+	}
+
+	if localPath == "" {
+		return nil, "Please enter valid local path."
+	}
+
+	if branch == "" {
+		return nil, "Please enter valid branch."
+	}
+
+	if starterUrl == "" {
+		return nil, "Please enter valid starter url."
+	}
+
+	if fromBranch == "" {
+		return nil, "Please enter valid from branch."
+	}
 
 	assignment := &Assignment{
-		Semester:   sem,
-		Name:       name,
-		Starter:    starter,
-		LocalClone: clone,
+		AssignmentPath:    assignmentPath,
+		SemesterPath:      sem,
+		Per:               per,
+		Description:       desc,
+		ContainerRegistry: conRegistry,
+		LocalPath:         localPath,
+		StarterUrl:        starterUrl,
 	}
 
 	assignment.setAssignment()
 
-	return assignment
+	starterCoder := &StarterCode{
+		Url:             starterUrl,
+		FromBranch:      fromBranch,
+		ProtectToBranch: protectToBranch,
+	}
+
+	starterCoder.setStarterCode()
+
+	clone := &Clone{
+		LocalPath: localPath,
+		Branch:    branch,
+	}
+
+	clone.setClone()
+
+	return assignment, ""
 }
 
 func (a Assignment) setAssignment() {
@@ -76,27 +105,25 @@ func (a Assignment) setAssignment() {
 
 	_, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
-			INSERT INTO Assignment IF NOT EXISTS (AssignmentName, SemesterName) VALUES ($1, $2);
+			INSERT INTO Assignment IF NOT EXISTS (AssignmentPath, SemesterPath, Per, Description, ContainerRegistry, LocalPath, StarterUrl) VALUES ($1, $2, $3, $4, $5, $6, $7);
 		COMMIT;
-		`, a.Name, a.Semester)
+		`, a.AssignmentPath, a.SemesterPath, a.Per, a.Description, a.ContainerRegistry, a.LocalPath, a.StarterUrl)
 
-	if DB.IsDuplicateUniqueIndexError(err) {
-		fmt.Printf("Duplicate Index ------- %v\n", err)
-	} else if err != nil {
+	if err != nil {
 		panic(err)
 	}
 }
 
-func GetAssignment(name string) *Assignment {
+func GetAssignment(path string) *Assignment {
 	db := util.GetDB()
 	defer util.FlushAndClose(db)
 
 	rss, _, err := db.Run(DB.NewRWCtx(), `
 			BEGIN TRANSACTION;
-				SELECT AssignmentID, AssignmentName, SemesterName FROM Assignment
-				WHERE AssignmentName = $1;
+				SELECT * FROM Assignment
+				WHERE AssignmentPath = $1;
 			COMMIT;
-		`, name)
+		`, path)
 
 	if err != nil {
 		panic(err)
@@ -121,15 +148,15 @@ func GetAssignment(name string) *Assignment {
 	return a
 }
 
-func DeleteAssignment(name string) {
+func DeleteAssignment(path string) {
 	db := util.GetDB()
 	defer util.FlushAndClose(db)
 
 	if _, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
-			DELETE FROM Assignment WHERE AssignmentName == $1;
+			DELETE FROM Assignment WHERE AssignmentPath = $1;
 		COMMIT;
-	`, name); err != nil {
+	`, path); err != nil {
 		panic(err)
 	}
 }
@@ -141,12 +168,46 @@ func (a *Assignment) UpdateAssignment() bool {
 	if _, _, err := db.Run(DB.NewRWCtx(), `
 			BEGIN TRANSACTION;
 				UPDATE Assignment
-					AssignmentName = $1, SemesterName = $2 
-				WHERE AssignmentName = $1;
+					AssignmentPath = $1, SemesterPath = $2, Per = $3, Description = $4, ContainerRegistry = $5, LocalPath = $6, StarterUrl = $7  
+				WHERE AssignmentPath = $1;
 			COMMIT;
-	`, a.Name, a.Semester); err != nil {
+	`, a.AssignmentPath, a.SemesterPath, a.Per, a.Description, a.ContainerRegistry, a.LocalPath, a.StarterUrl); err != nil {
 		panic(err)
 	}
 
 	return true
+}
+
+func (s StarterCode) setStarterCode() {
+	db := util.GetDB()
+	defer util.FlushAndClose(db)
+
+	if _, _, e := db.Run(DB.NewRWCtx(), `
+		BEGIN TRANSACTION;
+			INSERT INTO StarterCode IF NOT EXISTS (Url, FromBranch, ProtectToBranch) VALUES ($1, $2, $3);
+		COMMIT;
+	`, s.Url, s.FromBranch, s.ProtectToBranch); e != nil {
+		panic(e)
+	}
+}
+
+func (c Clone) setClone() {
+	db := util.GetDB()
+	defer util.FlushAndClose(db)
+
+	if _, _, e := db.Run(DB.NewRWCtx(), `
+		BEGIN TRANSACTION;
+			INSERT INTO Clone IF NOT EXISTS (LocalPath, Branch) VALUES ($1, $2);
+		COMMIT;
+	`, c.LocalPath, c.Branch); e != nil {
+		panic(e)
+	}
+}
+
+func (s StarterCode) toString() string {
+	return fmt.Sprintf("\tStarterCode:\n\t\tUrl:\t%s\n\t\tFromBranch:\t%s\n\t\tProtectToBranch:\t%v", s.Url, s.FromBranch, s.ProtectToBranch)
+}
+
+func (c Clone) toString() string {
+	return fmt.Sprintf("\tClone:\n\t\tLocalPath:\t%s\n\t\tBranch:\t%s", c.LocalPath, c.Branch)
 }

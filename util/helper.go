@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"os"
 	"regexp"
 
@@ -45,6 +46,8 @@ func GetDB() *database.DB {
 	}
 
 	if err != nil {
+
+		fmt.Printf("%v\n", err.Error())
 		panic(err)
 	}
 

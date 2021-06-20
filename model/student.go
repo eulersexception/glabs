@@ -3,6 +3,8 @@ package model
 import (
 	"fmt"
 
+	"github.com/google/go-cmp/cmp"
+
 	DB "modernc.org/ql"
 
 	util "github.com/eulersexception/glabs-ui/util"
@@ -34,16 +36,12 @@ func NewStudent(name string, firstName string, nickName string, email string, ma
 		return nil, res
 	}
 
-	db := util.GetDB()
+	existing := GetStudent(matrikelNr)
+	empty := &Student{}
 
-	schema := DB.MustSchema((*Student)(nil), "", nil)
-
-	if _, _, e := db.Execute(DB.NewRWCtx(), schema); e != nil {
-		panic(e)
+	if !cmp.Equal(existing, empty) {
+		return existing, "Student already exists - use update for changes"
 	}
-
-	db.Flush()
-	db.Close()
 
 	stud := &Student{
 		MatrikelNr: matrikelNr,
@@ -77,7 +75,6 @@ func (s *Student) GetMail() string {
 // This function updates student record in DB. An update could be a creation or edition of a record.
 func (s *Student) setStudent() {
 	db := util.GetDB()
-	defer util.FlushAndClose(db)
 
 	_, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -85,11 +82,11 @@ func (s *Student) setStudent() {
 		COMMIT;
 		`, s.MatrikelNr, s.Name, s.FirstName, s.NickName, s.Email)
 
-	if DB.IsDuplicateUniqueIndexError(err) {
-		fmt.Printf("Duplicate Index ------- %v\n", err)
-	} else if err != nil {
+	if err != nil {
 		panic(err)
 	}
+
+	util.FlushAndClose(db)
 }
 
 // GetStudent fetches student from DB with an argument of type int64 as Matrikelnr.
@@ -137,7 +134,8 @@ func DeleteStudent(matrikelNr int64) {
 
 	if _, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
-			DELETE FROM Student WHERE MatrikelNr == $1;
+			DELETE FROM Student WHERE MatrikelNr = $1;
+			DELETE FROM StudentTeam WHERE MatrikelNr = $1;
 		COMMIT;
 	`, matrikelNr); err != nil {
 		panic(err)
@@ -179,7 +177,6 @@ func (fst *Student) Equals(scd *Student) bool {
 // JoinTeam adds student to team.
 // Expects the team name (string).
 // Returns an error if the team doesn't exist otherwise nil (succesful operation).
-func (s Student) JoinTeam(teamId int64) error {
-
-	return nil
+func (s Student) JoinTeam(team string) {
+	NewStudentTeam(s.MatrikelNr, team)
 }

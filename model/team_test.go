@@ -6,6 +6,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+func init() {
+	CreateTables()
+}
+
 func TestNewTeamSuccess(t *testing.T) {
 	want := &Team{Name: "TestTeam1"}
 
@@ -29,6 +33,17 @@ func TestNewTeamFail(t *testing.T) {
 	}
 }
 
+func TestNewTeamAlreadyExists(t *testing.T) {
+	want := GetTeam("TestTeam1")
+	wantString := "Team already exists - use update for changes"
+
+	got, gotString := NewTeam("TestTeam1")
+
+	if !cmp.Equal(want, got) || wantString != gotString {
+		t.Errorf("want = '%v', got = '%v'\nwantString = '%s', gotString = '%s'", want, got, wantString, gotString)
+	}
+}
+
 func TestDeleteTeam(t *testing.T) {
 	team := &Team{Name: "TestTeam2"}
 
@@ -41,8 +56,4 @@ func TestDeleteTeam(t *testing.T) {
 	if !cmp.Equal(want, got) {
 		t.Errorf("want = %v, got %v", want, got)
 	}
-}
-
-func TestAddExistingStudent(t *testing.T) {
-
 }

@@ -14,6 +14,26 @@ var stud = &Student{
 	MatrikelNr: 9999,
 }
 
+func init() {
+	CreateTables()
+}
+
+func TestMailValid(t *testing.T) {
+	got := Mail("valid@mail.com")
+
+	if !got {
+		t.Errorf("Test failed for mail check. Want 'true' but got 'false'")
+	}
+}
+
+func TestMailInvalid(t *testing.T) {
+	got := Mail("in valid@mail#com")
+
+	if got {
+		t.Errorf("Test failed for mail check. Want 'false' but got 'true'")
+	}
+}
+
 func TestNewStudent(t *testing.T) {
 	want := stud
 	NewStudent(want.Name, want.FirstName, want.NickName, want.Email, want.MatrikelNr)
@@ -23,6 +43,17 @@ func TestNewStudent(t *testing.T) {
 
 	if !cmp.Equal(want, got) {
 		t.Errorf("want = '%v', got = '%v'\n", want, got)
+	}
+}
+
+func TestNewStudentAlreadyExists(t *testing.T) {
+	want := stud
+	wantString := "Student already exists - use update for changes"
+
+	got, gotString := NewStudent(stud.Name, stud.FirstName, stud.NickName, stud.Email, stud.MatrikelNr)
+
+	if !cmp.Equal(want, got) || wantString != gotString {
+		t.Errorf("want = '%v', got = '%v'\nwantString = '%s', gotString = '%s'", want, got, wantString, gotString)
 	}
 }
 
@@ -84,24 +115,4 @@ func TestUpdateStudent(t *testing.T) {
 
 	want.Email = "mm@example.com"
 	want.UpdateStudent()
-}
-
-func TestJoinTeam(t *testing.T) {
-
-}
-
-func TestMailValid(t *testing.T) {
-	got := Mail("valid@mail.com")
-
-	if !got {
-		t.Errorf("Test failed for mail check. Want 'true' but got 'false'")
-	}
-}
-
-func TestMailInvalid(t *testing.T) {
-	got := Mail("in valid@mail#com")
-
-	if got {
-		t.Errorf("Test failed for mail check. Want 'false' but got 'true'")
-	}
 }

@@ -15,19 +15,6 @@ type StudentTeam struct {
 
 func NewStudentTeam(matrikelNr int64, teamName string) {
 	db := util.GetDB()
-	schema := DB.MustSchema((*StudentTeam)(nil), "", nil)
-
-	if _, _, e := db.Execute(DB.NewRWCtx(), schema); e != nil {
-		panic(e)
-	}
-
-	util.FlushAndClose(db)
-
-	createNewEntry(matrikelNr, teamName)
-}
-
-func createNewEntry(matrikelNr int64, teamName string) {
-	db := util.GetDB()
 	defer util.FlushAndClose(db)
 
 	id := fmt.Sprintf("%d%s", matrikelNr, teamName)
@@ -81,4 +68,60 @@ func GetTeamsForStudent(matrikelNr int64) []*Team {
 	}
 
 	return teams
+}
+
+func GetStudentsForTeam(team string) []*Student {
+	db := util.GetDB()
+
+	rss, _, err := db.Run(DB.NewRWCtx(), `
+			SELECT MatrikelTeam, MatrikelNr, TeamName FROM StudentTeam WHERE TeamName = $1;
+		`, team)
+
+	if err != nil {
+		panic(err)
+	}
+
+	entries := make([]StudentTeam, 0)
+
+	for _, rs := range rss {
+		s := &StudentTeam{}
+
+		if e := rs.Do(false, func(data []interface{}) (bool, error) {
+
+			if err = DB.Unmarshal(s, data); err != nil {
+				return false, err
+			}
+
+			entries = append(entries, *s)
+			return true, nil
+		}); e != nil {
+			panic(e)
+		}
+	}
+
+	util.FlushAndClose(db)
+
+	studs := make([]*Student, 0)
+
+	for _, v := range entries {
+		studs = append(studs, GetStudent(v.MatrikelNr))
+	}
+
+	return studs
+}
+
+func RemoveStudentFromTeam(matrikelNr int64, team string) {
+	db := util.GetDB()
+
+	_, _, err := db.Run(DB.NewRWCtx(), `
+		BEGIN TRANSACTION;
+			DELETE FROM StudentTeam WHERE MatrikelNr = $1 AND TeamName = $2;
+		COMMIT;
+	`, matrikelNr, team)
+
+	if err != nil {
+		panic(err)
+	}
+
+	util.FlushAndClose(db)
 }
