@@ -52,8 +52,17 @@ func CreateTables() {
 		panic(e)
 	}
 
-	//schemaSemester := DB.MustSchema((*Semester)(nil), "", nil)
-	//schemaCourse := DB.MustSchema((*Course)(nil), "", nil)
+	schemaSemester := DB.MustSchema((*Semester)(nil), "", nil)
+
+	if _, _, e := db.Execute(DB.NewRWCtx(), schemaSemester); e != nil {
+		panic(e)
+	}
+
+	schemaCourse := DB.MustSchema((*Course)(nil), "", nil)
+
+	if _, _, e := db.Execute(DB.NewRWCtx(), schemaCourse); e != nil {
+		panic(e)
+	}
 }
 
 func DropTables() {
@@ -65,6 +74,7 @@ func DropTables() {
 			DROP TABLE IF EXISTS Team;
 			DROP TABLE IF EXISTS StudentTeam;
 			DROP TABLE IF EXISTS Assignment;
+			DROP TABLE IF EXISTS TeamAssignment;
 			DROP TABLE IF EXISTS StarterCode;
 			DROP TABLE IF EXISTS Clone;
 			DROP TABLE IF EXISTS Semester;

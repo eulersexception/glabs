@@ -38,35 +38,35 @@ func NewAssignment(assignmentPath string, sem string, per string,
 	protectToBranch bool) (*Assignment, string) {
 
 	if assignmentPath == "" {
-		return nil, "Please enter valid assignment path."
+		return nil, "Enter valid assignment path."
 	}
 
 	if sem == "" {
-		return nil, "Please enter valid semester path."
+		return nil, "Enter valid semester path."
 	}
 
 	if per == "" {
-		return nil, "Please enter valid per."
+		return nil, "Enter valid per."
 	}
 
 	if desc == "" {
-		return nil, "Please enter valid description."
+		return nil, "Enter valid description."
 	}
 
 	if localPath == "" {
-		return nil, "Please enter valid local path."
+		return nil, "Enter valid local path."
 	}
 
 	if branch == "" {
-		return nil, "Please enter valid branch."
+		return nil, "Enter valid branch."
 	}
 
 	if starterUrl == "" {
-		return nil, "Please enter valid starter url."
+		return nil, "Enter valid starter url."
 	}
 
 	if fromBranch == "" {
-		return nil, "Please enter valid from branch."
+		return nil, "Enter valid from branch."
 	}
 
 	assignment := &Assignment{
@@ -118,31 +118,31 @@ func GetAssignment(path string) *Assignment {
 	db := util.GetDB()
 	defer util.FlushAndClose(db)
 
-	rss, _, err := db.Run(DB.NewRWCtx(), `
+	rss, _, e := db.Run(DB.NewRWCtx(), `
 			BEGIN TRANSACTION;
 				SELECT * FROM Assignment
 				WHERE AssignmentPath = $1;
 			COMMIT;
 		`, path)
 
-	if err != nil {
-		panic(err)
+	if e != nil {
+		panic(e)
 	}
 
 	a := &Assignment{}
 
 	for _, rs := range rss {
 
-		if err := rs.Do(false, func(data []interface{}) (bool, error) {
+		if er := rs.Do(false, func(data []interface{}) (bool, error) {
 
-			if e := DB.Unmarshal(a, data); e != nil {
-				return false, e
+			if err := DB.Unmarshal(a, data); err != nil {
+				return false, err
 			}
 
 			return true, nil
 
-		}); err != nil {
-			panic(err)
+		}); er != nil {
+			panic(er)
 		}
 	}
 
@@ -170,12 +170,20 @@ func (a *Assignment) UpdateAssignment() {
 	if _, _, err := db.Run(DB.NewRWCtx(), `
 			BEGIN TRANSACTION;
 				UPDATE Assignment
-					AssignmentPath = $1, SemesterPath = $2, Per = $3, Description = $4, ContainerRegistry = $5, LocalPath = $6, StarterUrl = $7  
+					SemesterPath = $2, Per = $3, Description = $4, ContainerRegistry = $5, LocalPath = $6, StarterUrl = $7  
 				WHERE AssignmentPath = $1;
 			COMMIT;
 	`, a.AssignmentPath, a.SemesterPath, a.Per, a.Description, a.ContainerRegistry, a.LocalPath, a.StarterUrl); err != nil {
 		panic(err)
 	}
+}
+
+func (as *Assignment) AddTeam(name string) {
+	NewTeamAssignment(name, as.AssignmentPath)
+}
+
+func (as *Assignment) RemoveTeam(name string) {
+	RemoveTeamFromAssignment(name, as.AssignmentPath)
 }
 
 func (s StarterCode) setStarterCode() {

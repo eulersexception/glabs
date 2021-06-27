@@ -35,14 +35,14 @@ func NewTeamAssignment(name string, path string) {
 func GetAssignmentsForTeam(name string) []*Assignment {
 	db := util.GetDB()
 
-	rss, _, err := db.Run(DB.NewRWCtx(), `
+	rss, _, e := db.Run(DB.NewRWCtx(), `
 			SELECT NamePath, TeamName, AssignmentPath  
 			FROM TeamAssignment 
 			WHERE TeamName = $1;
 		`, name)
 
-	if err != nil {
-		panic(err)
+	if e != nil {
+		panic(e)
 	}
 
 	entries := make([]TeamAssignment, 0)
@@ -50,16 +50,16 @@ func GetAssignmentsForTeam(name string) []*Assignment {
 	for _, rs := range rss {
 		t := &TeamAssignment{}
 
-		if e := rs.Do(false, func(data []interface{}) (bool, error) {
+		if er := rs.Do(false, func(data []interface{}) (bool, error) {
 
-			if err = DB.Unmarshal(t, data); err != nil {
+			if err := DB.Unmarshal(t, data); err != nil {
 				return false, err
 			}
 
 			entries = append(entries, *t)
 			return true, nil
-		}); e != nil {
-			panic(e)
+		}); er != nil {
+			panic(er)
 		}
 	}
 
@@ -77,14 +77,14 @@ func GetAssignmentsForTeam(name string) []*Assignment {
 func GetTeamsForAssignment(path string) []*Team {
 	db := util.GetDB()
 
-	rss, _, err := db.Run(DB.NewRWCtx(), `
+	rss, _, e := db.Run(DB.NewRWCtx(), `
 			SELECT NamePath, TeamName, AssignmentPath 
 			FROM TeamAssignment 
 			WHERE AssignmentPath = $1;
 		`, path)
 
-	if err != nil {
-		panic(err)
+	if e != nil {
+		panic(e)
 	}
 
 	entries := make([]TeamAssignment, 0)
@@ -92,16 +92,16 @@ func GetTeamsForAssignment(path string) []*Team {
 	for _, rs := range rss {
 		t := &TeamAssignment{}
 
-		if e := rs.Do(false, func(data []interface{}) (bool, error) {
+		if er := rs.Do(false, func(data []interface{}) (bool, error) {
 
-			if err = DB.Unmarshal(t, data); err != nil {
+			if err := DB.Unmarshal(t, data); err != nil {
 				return false, err
 			}
 
 			entries = append(entries, *t)
 			return true, nil
-		}); e != nil {
-			panic(e)
+		}); er != nil {
+			panic(er)
 		}
 	}
 

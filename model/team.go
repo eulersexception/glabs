@@ -23,7 +23,7 @@ type Team struct {
 // Returns a new teamo.
 func NewTeam(name string) (*Team, string) {
 	if name == "" {
-		res := "\n+++ Please enter a valid team name."
+		res := "\n+++ Enter valid team name."
 		return nil, res
 	}
 
@@ -47,7 +47,7 @@ func (t *Team) AddStudent(s *Student) {
 	NewStudentTeam(s.MatrikelNr, t.Name)
 }
 
-func (t Team) RemoveStudent(s Student) {
+func (t *Team) RemoveStudent(s *Student) {
 	RemoveStudentFromTeam(s.MatrikelNr, t.Name)
 }
 
@@ -60,7 +60,8 @@ func (t *Team) UpdateTeam(newName string) {
 	if _, _, err := db.Run(DB.NewRWCtx(), `
 			BEGIN TRANSACTION;
 				UPDATE Team	TeamName = $1 WHERE TeamName = $2;
-				UPDATE StudentTeam IF EXISTS TeamName = $1 WHERE TeamName = $2;
+				UPDATE StudentTeam TeamName = $1 WHERE TeamName = $2;
+				UPDATE TeamAssignment TeamName = $1 WHERE TeamName = $2;
 			COMMIT;
 	`, newName, t.Name); err != nil {
 		panic(err)
@@ -92,31 +93,29 @@ func GetTeam(name string) *Team {
 	db := util.GetDB()
 	defer util.FlushAndClose(db)
 
-	//t := &Team{Name: name}
-
-	rss, _, err := db.Run(DB.NewRWCtx(), `
+	rss, _, e := db.Run(DB.NewRWCtx(), `
 				BEGIN TRANSACTION;
 					SELECT id(), TeamName FROM Team WHERE TeamName = $1;
 				COMMIT;
 			`, name)
 
-	if err != nil {
-		panic(err)
+	if e != nil {
+		panic(e)
 	}
 
 	t := &Team{}
 
 	for _, rs := range rss {
 
-		if err := rs.Do(false, func(data []interface{}) (bool, error) {
+		if er := rs.Do(false, func(data []interface{}) (bool, error) {
 
 			if err := DB.Unmarshal(t, data); err != nil {
 				return false, err
 			}
 
 			return true, nil
-		}); err != nil {
-			panic(err)
+		}); er != nil {
+			panic(er)
 		}
 	}
 

@@ -34,14 +34,14 @@ func NewStudentTeam(matrikelNr int64, teamName string) {
 func GetTeamsForStudent(matrikelNr int64) []*Team {
 	db := util.GetDB()
 
-	rss, _, err := db.Run(DB.NewRWCtx(), `
+	rss, _, e := db.Run(DB.NewRWCtx(), `
 			SELECT MatrikelTeam, MatrikelNr, TeamName 
 			FROM StudentTeam 
 			WHERE MatrikelNr = $1;
 		`, matrikelNr)
 
-	if err != nil {
-		panic(err)
+	if e != nil {
+		panic(e)
 	}
 
 	entries := make([]StudentTeam, 0)
@@ -49,16 +49,16 @@ func GetTeamsForStudent(matrikelNr int64) []*Team {
 	for _, rs := range rss {
 		s := &StudentTeam{}
 
-		if e := rs.Do(false, func(data []interface{}) (bool, error) {
+		if er := rs.Do(false, func(data []interface{}) (bool, error) {
 
-			if err = DB.Unmarshal(s, data); err != nil {
+			if err := DB.Unmarshal(s, data); err != nil {
 				return false, err
 			}
 
 			entries = append(entries, *s)
 			return true, nil
-		}); e != nil {
-			panic(e)
+		}); er != nil {
+			panic(er)
 		}
 	}
 
@@ -76,14 +76,14 @@ func GetTeamsForStudent(matrikelNr int64) []*Team {
 func GetStudentsForTeam(team string) []*Student {
 	db := util.GetDB()
 
-	rss, _, err := db.Run(DB.NewRWCtx(), `
+	rss, _, e := db.Run(DB.NewRWCtx(), `
 			SELECT MatrikelTeam, MatrikelNr, TeamName 
 			FROM StudentTeam 
 			WHERE TeamName = $1;
 		`, team)
 
-	if err != nil {
-		panic(err)
+	if e != nil {
+		panic(e)
 	}
 
 	entries := make([]StudentTeam, 0)
@@ -91,16 +91,16 @@ func GetStudentsForTeam(team string) []*Student {
 	for _, rs := range rss {
 		s := &StudentTeam{}
 
-		if e := rs.Do(false, func(data []interface{}) (bool, error) {
+		if er := rs.Do(false, func(data []interface{}) (bool, error) {
 
-			if err = DB.Unmarshal(s, data); err != nil {
+			if err := DB.Unmarshal(s, data); err != nil {
 				return false, err
 			}
 
 			entries = append(entries, *s)
 			return true, nil
-		}); e != nil {
-			panic(e)
+		}); er != nil {
+			panic(er)
 		}
 	}
 

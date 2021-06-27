@@ -1,33 +1,110 @@
 package model
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/eulersexception/glabs-ui/util"
+
+	DB "modernc.org/ql"
+)
 
 type Semester struct {
-	SemesterID int64   `ql:"index xID"`
-	Name       string  `ql:"uindex xName, name SemesterName"`
-	Course     *Course `ql:"CourseName"`
+	SemesterID *int64 `ql:"index xID"`
+	Path       string `ql:"uindex xPath, name SemesterPath"`
+	CoursePath string
 }
 
-func NewSemester(course *Course, name string, url string) *Semester {
-	if name == "" {
-		fmt.Println("Provide a valid naming for semester")
+func NewSemester(coursePath string, path string) *Semester {
+	if path == "" {
+		fmt.Println("Enter valid path for semester.")
 		return nil
 	}
 
-	semester := &Semester{
-		Course: course,
-		Name:   name,
+	if coursePath == "" {
+		fmt.Println("Enter valid course path.")
+		return nil
 	}
 
-	return semester
+	s := &Semester{
+		Path:       path,
+		CoursePath: coursePath,
+	}
+
+	s.setSemester()
+
+	return s
 }
 
-func (s *Semester) AddAssignmentToSemester(a *Assignment) *Semester {
+func (s *Semester) setSemester() {
+	db := util.GetDB()
+	defer util.FlushAndClose(db)
 
-	return nil
+	_, _, e := db.Run(DB.NewRWCtx(), `
+		BEGIN TRANSACTION;
+			INSERT INTO Semester IF NOT EXISTS (SemesterPath, CoursePath) VALUES ($1, $2);
+		COMMIT;
+	`, s.Path, s.CoursePath)
+
+	if e != nil {
+		panic(e)
+	}
 }
 
-func (s *Semester) DeleteAssignmentFromSemester(a *Assignment) *Semester {
+func GetSemester(path string) *Semester {
+	db := util.GetDB()
+	defer util.FlushAndClose(db)
 
-	return nil
+	rss, _, e := db.Run(nil, `
+		SELECT * FROM Semester WHERE SemesterPath = $1;
+	`, path)
+
+	if e != nil {
+		panic(e)
+	}
+
+	s := &Semester{}
+
+	for _, rs := range rss {
+
+		if er := rs.Do(false, func(data []interface{}) (bool, error) {
+
+			if err := DB.Unmarshal(s, data); err != nil {
+				return false, err
+			}
+
+			return true, nil
+		}); er != nil {
+			panic(er)
+		}
+	}
+
+	return s
+}
+
+func DeleteSemester(path string) {
+	db := util.GetDB()
+	defer db.Close()
+
+	if _, _, err := db.Run(DB.NewRWCtx(), `
+		BEGIN TRANSACTION;
+			DELETE FROM Semester WHERE SemesterPath = $1;
+		COMMIT;
+	`, path); err != nil {
+		panic(err)
+	}
+}
+
+func (s *Semester) UpdateSemester(course string) {
+	db := util.GetDB()
+	defer util.FlushAndClose(db)
+
+	_, _, err := db.Run(DB.NewRWCtx(), `
+		BEGIN TRANSACTION;
+			UPDATE Semester CoursePath = $1 WHERE SemesterPath = $2;
+		COMMIT;
+	`, course, s.Path)
+
+	if err != nil {
+		panic(err)
+	}
 }

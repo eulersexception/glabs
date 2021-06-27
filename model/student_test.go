@@ -22,7 +22,7 @@ func TestMailValid(t *testing.T) {
 	got := Mail("valid@mail.com")
 
 	if !got {
-		t.Errorf("Test failed for mail check. Want 'true' but got 'false'")
+		t.Errorf("want = true, got = false\n")
 	}
 }
 
@@ -30,7 +30,7 @@ func TestMailInvalid(t *testing.T) {
 	got := Mail("in valid@mail#com")
 
 	if got {
-		t.Errorf("Test failed for mail check. Want 'false' but got 'true'")
+		t.Error("want = false, got = true\n")
 	}
 }
 
@@ -58,7 +58,7 @@ func TestNewStudentAlreadyExists(t *testing.T) {
 }
 
 func TestNewStudentFailMissingName(t *testing.T) {
-	want := "\n+++ Please provide valid name or first name.\n"
+	want := "\n+++ Enter valid name or first name.\n"
 
 	_, got := NewStudent("", stud.FirstName, stud.NickName, stud.Email, stud.MatrikelNr)
 
@@ -68,7 +68,7 @@ func TestNewStudentFailMissingName(t *testing.T) {
 }
 
 func TestNewStudentFailMissingFirstName(t *testing.T) {
-	want := "\n+++ Please provide valid name or first name.\n"
+	want := "\n+++ Enter valid name or first name.\n"
 
 	_, got := NewStudent(stud.Name, "", stud.NickName, stud.Email, stud.MatrikelNr)
 
@@ -79,7 +79,7 @@ func TestNewStudentFailMissingFirstName(t *testing.T) {
 
 func TestNewStudentFailMalformedMailAddress(t *testing.T) {
 	malformed := "bla@blub@blub bla.com"
-	want := "\n+++ Please provide valid email address.\n"
+	want := "\n+++ Enter valid email address.\n"
 
 	_, got := NewStudent(stud.Name, stud.FirstName, stud.NickName, malformed, stud.MatrikelNr)
 

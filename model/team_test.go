@@ -24,7 +24,7 @@ func TestNewTeamSuccess(t *testing.T) {
 }
 
 func TestNewTeamFail(t *testing.T) {
-	want := "\n+++ Please enter a valid team name."
+	want := "\n+++ Enter valid team name."
 
 	gotTeam, got := NewTeam("")
 

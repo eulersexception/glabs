@@ -27,12 +27,12 @@ type Student struct {
 // Returns a pointer to a new student and a message string. If provided arguments are invalid the message will not be empty.
 func NewStudent(name string, firstName string, nickName string, email string, matrikelNr int64) (*Student, string) {
 	if name == "" || firstName == "" {
-		res := "\n+++ Please provide valid name or first name.\n"
+		res := "\n+++ Enter valid name or first name.\n"
 		return nil, res
 	}
 
 	if Mail(email) == false {
-		res := "\n+++ Please provide valid email address.\n"
+		res := "\n+++ Enter valid email address.\n"
 		return nil, res
 	}
 
@@ -96,7 +96,7 @@ func GetStudent(matrikelNr int64) *Student {
 	db := util.GetDB()
 	defer util.FlushAndClose(db)
 
-	rss, _, err := db.Run(DB.NewRWCtx(), `
+	rss, _, e := db.Run(DB.NewRWCtx(), `
 			BEGIN TRANSACTION;
 				SELECT id(), MatrikelNr, Name, FirstName, NickName, Email 
 				FROM Student
@@ -104,24 +104,24 @@ func GetStudent(matrikelNr int64) *Student {
 			COMMIT;
 		`, matrikelNr)
 
-	if err != nil {
-		panic(err)
+	if e != nil {
+		panic(e)
 	}
 
 	s := &Student{}
 
 	for _, rs := range rss {
 
-		if err := rs.Do(false, func(data []interface{}) (bool, error) {
+		if er := rs.Do(false, func(data []interface{}) (bool, error) {
 
-			if e := DB.Unmarshal(s, data); e != nil {
-				return false, e
+			if err := DB.Unmarshal(s, data); err != nil {
+				return false, err
 			}
 
 			return true, nil
 
-		}); err != nil {
-			panic(err)
+		}); er != nil {
+			panic(er)
 		}
 	}
 
