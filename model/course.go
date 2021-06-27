@@ -2,65 +2,89 @@ package model
 
 import (
 	"fmt"
+
+	util "github.com/eulersexception/glabs-ui/util"
+	DB "modernc.org/ql"
 )
 
 type Course struct {
-	Name        string
-	Description string
-	Semesters   []*Semester
+	CourseID *int64 `ql:"index xID"`
+	Path     string `ql:"uindex xPath, name CoursePath"`
 }
 
-func NewCourse(name string, description string) *Course {
+func NewCourse(path string) *Course {
 
-	if name == "" {
-		fmt.Println("Please enter a valid course name.")
+	if path == "" {
+		fmt.Println("Enter valid course path.")
 		return nil
 	}
 
-	var semesters []*Semester
-
 	c := &Course{
-		Name:      name,
-		Semesters: semesters,
+		Path: path,
 	}
 
-	if description != "" {
-		c.Description = description
-	}
+	c.setCourse()
 
 	return c
 }
 
-func (c *Course) AddSemesterToCourse(s *Semester) *Course {
-	if s == nil {
-		fmt.Println("No valid argument for student")
-		return c
+func (c *Course) setCourse() {
+	db := util.GetDB()
+	defer util.FlushAndClose(db)
+
+	_, _, err := db.Run(DB.NewRWCtx(), `
+		BEGIN TRANSACTION;
+			INSERT INTO Course IF NOT EXISTS (CoursePath) VALUES ($1);
+		COMMIT;
+		`, c.Path)
+
+	if err != nil {
+		panic(err)
 	}
-
-	c.Semesters = append(c.Semesters, s)
-
-	return c
 }
 
-func (c *Course) DeleteSemesterFromCourse(s *Semester) *Course {
-	if s == nil {
-		fmt.Println("No valid argument for student")
+func GetCourse(path string) *Course {
+	db := util.GetDB()
+	defer util.FlushAndClose(db)
+
+	rss, _, e := db.Run(nil, `
+		SELECT * FROM Course WHERE CoursePath = $1;
+	`, path)
+
+	if e != nil {
+		panic(e)
 	}
 
-	index := -1
+	c := &Course{}
 
-	for i, v := range c.Semesters {
-		if v.Name == s.Name {
-			index = i
+	for _, rs := range rss {
+
+		if er := rs.Do(false, func(data []interface{}) (bool, error) {
+
+			if err := DB.Unmarshal(c, data); err != nil {
+				return false, err
+			}
+
+			return true, nil
+		}); er != nil {
+			panic(er)
 		}
 	}
 
-	if index == -1 {
-		return c
-	}
-
-	c.Semesters[index] = c.Semesters[len(c.Semesters)-1]
-	c.Semesters = c.Semesters[:len(c.Semesters)-1]
-
 	return c
+}
+
+func DeleteSemesterFromCourse(path string) {
+	db := util.GetDB()
+	defer util.FlushAndClose(db)
+
+	_, _, err := db.Run(DB.NewRWCtx(), `
+		BEGIN TRANSACTION;
+			DELETE FROM Course WHERE CoursePath = $1;
+		COMMIT;
+	`, path)
+
+	if err != nil {
+		panic(err)
+	}
 }

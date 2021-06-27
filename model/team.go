@@ -1,307 +1,152 @@
 package model
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
 
-	"github.com/dgraph-io/badger/v3"
-	"github.com/eulersexception/glabs-ui/util"
 	"github.com/google/go-cmp/cmp"
+
+	util "github.com/eulersexception/glabs-ui/util"
+	DB "modernc.org/ql"
 )
 
 // Team - Name is the primary key. All fields are public an
 
 // Getter or Setter functions relate to database operations.
 type Team struct {
-	Assignment *Assignment
-	Name       string
-	Students   []*Student
-}
-
-type JSONTeam struct {
-	AssignmentId string   `json:"assignmentid"`
-	Name         string   `json:"name"`
-	StudentIds   []uint32 `json:"studentids"`
-}
-
-func NewJSONTeam(t *Team) JSONTeam {
-	jstuds := make([]uint32, 0)
-
-	for _, v := range t.Students {
-		jstuds = append(jstuds, v.Id)
-	}
-
-	var assignmentId string
-
-	if t.Assignment == nil {
-		assignmentId = ""
-	} else {
-		assignmentId = t.Assignment.Name
-	}
-
-	return JSONTeam{
-		assignmentId,
-		t.Name,
-		jstuds,
-	}
-}
-
-func (jt JSONTeam) Team() *Team {
-	studs := make([]*Student, 0)
-
-	// for _, v := range jt.StudentIds {
-	// 	student, err := GetStudent(v)
-
-	// 	if err != nil {
-	// 		log.Fatal(err)
-	// 	}
-
-	// 	studs = append(studs, student)
-	// }
-
-	return &Team{
-		nil,
-		jt.Name,
-		studs,
-	}
+	TeamID int64  `ql:"index xID"`
+	Name   string `ql:"uindex xName, name TeamName"`
 }
 
 // NewTeam creates a new team and stores the object in DB.
 // String argument for name must not be empty.
 // If a team with given name exists already in DB, the existing dataset will be overwritten.
 // Returns a new teamo.
-func NewTeam(assignment *Assignment, name string) (*Team, string) {
-
+func NewTeam(name string) (*Team, string) {
 	if name == "" {
-		res := "\n+++ Please enter a valid team name."
+		res := "\n+++ Enter valid team name."
 		return nil, res
 	}
 
-	var students []*Student
+	existing := GetTeam(name)
+	empty := &Team{}
+
+	if !cmp.Equal(existing, empty) {
+		return existing, "Team already exists - use update for changes"
+	}
 
 	team := &Team{
-		Assignment: assignment,
-		Name:       name,
-		Students:   students,
+		Name: name,
 	}
 
-	err := team.setTeam()
-
-	if err != nil {
-		return nil, err.Error()
-	}
+	team.setTeam()
 
 	return team, ""
 }
 
-func (t *Team) AddStudent(s *Student) error {
-	index := -1
-
-	for i, v := range t.Students {
-		if v.Id == s.Id {
-			index = i
-			if !cmp.Equal(v, s) {
-				t.Students[i] = s
-				err := t.UpdateTeam()
-
-				if err != nil {
-					log.Fatal(err)
-					return err
-				}
-
-				s.Team = t
-				err = s.UpdateStudent()
-
-				if err != nil {
-					log.Fatal(err)
-					return err
-				}
-			}
-		}
-	}
-
-	if index == -1 {
-		t.Students = append(t.Students, s)
-		err := t.UpdateTeam()
-
-		if err != nil {
-			log.Fatal(err)
-			return err
-		}
-
-		s.Team = t
-		err = s.UpdateStudent()
-
-		if err != nil {
-			log.Fatal(err)
-			return err
-		}
-	}
-
-	return nil
+func (t *Team) AddStudent(s *Student) {
+	NewStudentTeam(s.MatrikelNr, t.Name)
 }
 
-func (t Team) RemoveStudent(s Student) error {
-	index := -1
-
-	for i, v := range t.Students {
-		if s.Id == v.Id {
-			index = i
-		}
-	}
-
-	if index == -1 {
-		return nil
-	}
-
-	t.Students[index] = t.Students[len(t.Students)-1]
-	t.Students = t.Students[:len(t.Students)-1]
-	err := t.setTeam()
-
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-
-	s.Team = nil
-	err = s.UpdateStudent()
-
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-
-	return err
-}
-
-func (t *Team) encodeTeam() []byte {
-	data, err := json.Marshal(NewJSONTeam(t))
-
-	if err != nil {
-		panic(err)
-	}
-
-	return data
-}
-
-func decodeTeam(data []byte) *Team {
-	var jt JSONTeam
-	err := json.Unmarshal(data, &jt)
-
-	if err != nil {
-		panic(err)
-	}
-
-	return jt.Team()
+func (t *Team) RemoveStudent(s *Student) {
+	RemoveStudentFromTeam(s.MatrikelNr, t.Name)
 }
 
 // UpdateTeam changes a teams record in DB.
 // Returns an error if the update fails.
-func (t *Team) UpdateTeam() error {
-	_, err := GetTeam(t.Name)
+func (t *Team) UpdateTeam(newName string) {
+	db := util.GetDB()
+	defer util.FlushAndClose(db)
 
-	if err != nil {
-		log.Printf("\n+++ Update of team with name %s failer while checking if team exists.\n+++ %s\n", t.Name, err.Error())
-		return err
+	if _, _, err := db.Run(DB.NewRWCtx(), `
+			BEGIN TRANSACTION;
+				UPDATE Team	TeamName = $1 WHERE TeamName = $2;
+				UPDATE StudentTeam TeamName = $1 WHERE TeamName = $2;
+				UPDATE TeamAssignment TeamName = $1 WHERE TeamName = $2;
+			COMMIT;
+	`, newName, t.Name); err != nil {
+		panic(err)
 	}
-
-	err = t.setTeam()
-
-	return err
 }
 
-// This function updates team record in DB. An update could be a creation or edition of a record.
-func (t *Team) setTeam() error {
+// This function updates team record in DB.
+// An update could be a creation or edition of a record.
+func (t *Team) setTeam() {
 	db := util.GetDB()
-	db.Close()
+	defer util.FlushAndClose(db)
 
-	k := []byte(t.Name)
-	v := []byte(t.encodeTeam())
+	_, _, err := db.Run(DB.NewRWCtx(), `
+		BEGIN TRANSACTION;
+			INSERT INTO Team IF NOT EXISTS (TeamName) VALUES ($1);
+		COMMIT;
+		`, t.Name)
 
-	err := db.Update(func(txn *badger.Txn) error {
-		e := txn.Set(k, v)
-
-		return e
-	})
-
-	return err
+	if DB.IsDuplicateUniqueIndexError(err) {
+		fmt.Printf("Duplicate Index ------- %v\n", err)
+	} else if err != nil {
+		panic(err)
+	}
 }
 
 // GetTeam fetches team from DB with an argument of type string as name.
 // Returns an error if fetch fails or a pointer to the Team.
-func GetTeam(name string) (*Team, error) {
+func GetTeam(name string) *Team {
 	db := util.GetDB()
-	defer db.Close()
+	defer util.FlushAndClose(db)
 
-	var t *Team
+	rss, _, e := db.Run(DB.NewRWCtx(), `
+				BEGIN TRANSACTION;
+					SELECT id(), TeamName FROM Team WHERE TeamName = $1;
+				COMMIT;
+			`, name)
 
-	err := db.View(func(txn *badger.Txn) error {
-		item, err := txn.Get([]byte(name))
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = item.Value(func(val []byte) error {
-			// TODO: implement third parameter assignment name
-			t = decodeTeam(val)
-			//fmt.Println(fmt.Sprintf("Key = %s, Value = %s", item.String(), string(val)))
-			return err
-		})
-		return err
-	})
-
-	if err != nil {
-		return nil, err
+	if e != nil {
+		panic(e)
 	}
 
-	return t, nil
+	t := &Team{}
+
+	for _, rs := range rss {
+
+		if er := rs.Do(false, func(data []interface{}) (bool, error) {
+
+			if err := DB.Unmarshal(t, data); err != nil {
+				return false, err
+			}
+
+			return true, nil
+		}); er != nil {
+			panic(er)
+		}
+	}
+
+	return t
 }
 
 // DeleteTeam removes a team by name (string) from DB.
 // Returns an error if operation fails.
-func DeleteTeam(name string) error {
+func DeleteTeam(name string) {
 	db := util.GetDB()
-	defer db.Close()
+	defer util.FlushAndClose(db)
 
-	err := db.Update(func(txn *badger.Txn) error {
-		e := txn.Delete([]byte(name))
-
-		return e
-	})
-
-	return err
-}
-
-// PrintData outputs a human readable string for team data.
-func (t Team) PrintMembers() {
-	if t.Assignment != nil {
-		fmt.Printf("Current Assignment = %s", t.Assignment.Name)
-	}
-
-	fmt.Printf("Team: %s\n", t.Name)
-
-	for _, v := range t.Students {
-		fmt.Printf("Member: %s\n", v.NickName)
+	if _, _, err := db.Run(DB.NewRWCtx(), `
+		BEGIN TRANSACTION;
+			DELETE FROM Team WHERE TeamName = $1;
+			DELETE FROM StudentTeam WHERE TeamName = $1;
+			DELETE FROM TeamAssignment WHERE TeamName = $1;
+		COMMIT;
+	`, name); err != nil {
+		panic(err)
 	}
 }
 
 func (fst *Team) Equals(scd *Team) bool {
-	if scd == nil {
+	if scd == nil || fst.Name != scd.Name {
 		return false
-	}
-
-	if fst.Name != scd.Name || len(fst.Students) != len(scd.Students) {
-		return false
-	}
-
-	for i, f := range fst.Students {
-		s := scd.Students[i]
-		if !f.Equals(s) {
-			return false
-		}
 	}
 
 	return true
+}
+
+func (t Team) JoinAssignment(assignmentPath string) {
+	NewTeamAssignment(t.Name, assignmentPath)
 }
