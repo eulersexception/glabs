@@ -1,134 +1,143 @@
 package view
 
 import (
-	"fmt"
 
-	glabsmodel "github.com/eulersexception/glabs-ui/model"
-	glabsutil "github.com/eulersexception/glabs-ui/util"
+	// "fyne.io/fyne/v2"
+	"image/color"
+	"log"
 
-	"fyne.io/fyne"
-	"fyne.io/fyne/app"
-	"fyne.io/fyne/layout"
-	"fyne.io/fyne/widget"
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/theme"
+	"fyne.io/fyne/v2/widget"
+
+	model "github.com/eulersexception/glabs-ui/model"
 )
 
-var dialogButtonSize = fyne.NewSize(80, 30)
-var dialogWindowSize = fyne.NewSize(400, 150)
+func CreateHomeView(myApp fyne.App) {
 
-type HomeView struct {
-	App       fyne.App
-	Window    fyne.Window
-	TabBar    *widget.TabContainer
-	News      *widget.TextGrid
-	Buttons   *widget.SplitContainer
-	Container *fyne.Container
-	MainMenu  *fyne.MainMenu
-}
+	//myApp := app.New()
+	myWindow := myApp.NewWindow("Glabs")
+	// myWindow.Resize(fyne.NewSize(800.0, 600.0))
 
-func NewHomeview() *HomeView {
-	h := &HomeView{
-		App: app.New(),
+	menueBar := createMenueBar()
+	sepLine := canvas.NewLine(color.White)
+	sepLine.StrokeWidth = 0.2
+	menue := container.NewVSplit(menueBar, sepLine)
+
+	content := container.NewBorder(menue, nil, nil, nil)
+
+	courseButtons := createCourseButtons()
+	courseAccordion := widget.NewAccordion()
+
+	for _, v := range courseButtons {
+		courseAccordion.Append(widget.NewAccordionItem(v.Text, v))
 	}
 
-	h.Window = h.App.NewWindow("GLabs")
-	h.MainMenu = glabsutil.MakeMainMenu()
-	h.Window.SetMainMenu(h.MainMenu)
-	h.TabBar = widget.NewTabContainer()
+	courseOne := widget.NewAccordion()
 
-	h.Buttons = widget.NewHSplitContainer(makeButtonForCourseOverview(h.TabBar), MakeButtonForCourseCreation(h.TabBar))
-	h.News = makeNewsContent()
-	h.Container = fyne.NewContainerWithLayout(layout.NewVBoxLayout(), layout.NewSpacer(), h.News, layout.NewSpacer(), layout.NewSpacer(), h.Buttons)
-	item := widget.NewTabItem("Home", h.Container)
-	h.TabBar.Append(item)
-	h.TabBar.SelectTab(item)
-	h.Window.SetContent(h.TabBar)
-	h.Window.Resize(fyne.NewSize(1200, 800))
+	semesterList := container.NewVScroll(courseOne)
 
-	return h
-}
+	//content := container.NewBorder(tools, nil, semesterList, canvas.NewText("", color.White))
 
-func makeNewsContent() *widget.TextGrid {
-	newsTicker := widget.NewTextGrid()
-	newsTicker.SetText("Here you can see a lot of updates for all the repos")
+	right1 := canvas.NewText("Sommersemester 2016", color.White)
+	right2 := canvas.NewText("Wintersemester 2016/2017", color.White)
+	right3 := canvas.NewText("Sommersemester 2017", color.White)
+	// right4 := canvas.NewText("Wintersemester 2017/2018", color.White)
+	// right5 := canvas.NewText("Sommersemester 2018", color.White)
 
-	return newsTicker
-}
-
-func MakeButtonForCourseCreation(tc *widget.TabContainer) *widget.Button {
-
-	createCourseButton := widget.NewButton("Kurs erstellen", func() {
-		mainWindow := glabsutil.GetMainWindow()
-
-		// initializing new window, creating entries and form
-		w := fyne.CurrentApp().NewWindow("Kurs erstellen")
-		courseNameEntry := widget.NewEntry()
-		courseNameEntry.SetPlaceHolder("Kurs Bezeichnung")
-		courseDescription := widget.NewMultiLineEntry()
-		courseDescription.SetPlaceHolder("Kursbeschreibung eingeben")
-		form := widget.NewForm(widget.NewFormItem("Kurs", courseNameEntry), widget.NewFormItem("Beschreibung", courseDescription))
-
-		// ok button
-		doneButton := widget.NewButton("Fertig", func() {
-			doneWindow := fyne.CurrentApp().NewWindow(fmt.Sprintf("Kurs \"%s\" erstellen?", courseNameEntry.Text))
-			message := widget.NewLabel(fmt.Sprintf("Soll der Kurs \"%s\" erstellt werden?", courseNameEntry.Text))
-			messageBox := fyne.NewContainerWithLayout(layout.NewCenterLayout(), message)
-			ok := widget.NewButton("OK", func() {
-				courseDescription.SetReadOnly(true)
-				courseNameEntry.SetReadOnly(true)
-				mainWindow.Content().Refresh()
-				mainWindow.RequestFocus()
-				doneWindow.Close()
-				w.Close()
-			})
-			cancel := widget.NewButton("Abbrechen", func() {
-				doneWindow.Close()
-				w.RequestFocus()
-			})
-
-			buttonBox := widget.NewHSplitContainer(ok, cancel)
-			doneWindow.SetContent(widget.NewVBox(layout.NewSpacer(), messageBox, layout.NewSpacer(), buttonBox))
-			doneWindow.Resize(dialogWindowSize)
-			doneWindow.CenterOnScreen()
-			doneWindow.Show()
-		})
-
-		// cancel button
-		cancelButton := glabsutil.MakeCancelButtonForDialog(mainWindow, w)
-
-		// wrapping widgets in container
-		buttons := widget.NewHSplitContainer(doneButton, cancelButton)
-		container := widget.NewVScrollContainer(widget.NewVBox(form, layout.NewSpacer(), buttons))
-		w.SetContent(container)
-		w.Resize(fyne.NewSize(800, 600))
-
-		// displaying on center of screen
-		w.CenterOnScreen()
-		w.Show()
+	testContent1 := widget.NewButton("SoSe 2016", func() {
+		content.Objects[2] = right1
 	})
 
-	return createCourseButton
-}
-
-func makeButtonForCourseOverview(tc *widget.TabContainer) *widget.Button {
-	overviewButton := widget.NewButton("Kursübersicht", func() {
-		courseOverview := NewCourseOverview(createDummyCourses(30), tc)
-		item := widget.NewTabItem("Kursübersicht", courseOverview.Container)
-		tc.Append(item)
-		item.Content.Refresh()
+	testContent2 := widget.NewButton("WiSe 2016/2017", func() {
+		content.Objects[2] = right2
 	})
 
-	return overviewButton
+	testContent3 := widget.NewButton("SoSe 2017", func() {
+		content.Objects[2] = right3
+	})
+
+	testContent4 := widget.NewButton("WiSe 2017/2018", func() {
+		assignment, _ := model.NewAssignment(a.AssignmentPath, a.SemesterPath, a.Per,
+			a.Description, a.ContainerRegistry, a.LocalPath,
+			clone.Branch, a.StarterUrl, starter.FromBranch,
+			starter.ProtectToBranch)
+		content.Objects[2] = NewAssignmentView(assignment).Content
+	})
+
+	testContent5 := widget.NewButton("SoSe 2018", func() {
+		stud := &model.Student{
+			MatrikelNr: 12345,
+			Name:       "Max",
+			FirstName:  "Mustermann",
+			NickName:   "Maxl",
+			Email:      "max@muster.mann",
+		}
+		content.Objects[2] = NewStudentView(stud).Content
+	})
+
+	semOne := widget.NewAccordionItem("AlgoDat1", fyne.NewContainerWithLayout(layout.NewVBoxLayout(), testContent1, testContent2, testContent3, testContent4, testContent5))
+	semTwo := widget.NewAccordionItem("AlgoDat2", fyne.NewContainerWithLayout(layout.NewVBoxLayout(), testContent1, testContent2, testContent3, testContent4, testContent5))
+	semThree := widget.NewAccordionItem("VSS", fyne.NewContainerWithLayout(layout.NewVBoxLayout(), testContent1, testContent2, testContent3, testContent4, testContent5))
+	semFour := widget.NewAccordionItem("Softwareentwicklung 1", fyne.NewContainerWithLayout(layout.NewVBoxLayout(), testContent1, testContent2, testContent3, testContent4, testContent5))
+
+	courseOne.Append(semOne)
+	courseOne.Append(semTwo)
+	courseOne.Append(semThree)
+	courseOne.Append(semFour)
+
+	myWindow.SetContent(content)
+	myWindow.ShowAndRun()
+
 }
 
-func createDummyCourses(n int) []*glabsmodel.Course {
-	courses := make([]*glabsmodel.Course, 0)
+func createMenueBar() *container.Split {
 
-	for i := 0; i < n; i++ {
-		name := fmt.Sprintf("AlgoDat %02d", i)
-		description := fmt.Sprintf("Algorithmen pur Teil %d", i)
-		course := &glabsmodel.Course{Name: name, Description: description, Semesters: nil}
-		courses = append(courses, course)
+	t := widget.NewToolbar(
+		widget.NewToolbarAction(theme.DocumentCreateIcon(), func() {
+			log.Println("New document")
+		}),
+		widget.NewToolbarSeparator(),
+		widget.NewToolbarAction(theme.ContentCutIcon(), func() {}),
+		widget.NewToolbarAction(theme.ContentCopyIcon(), func() {}),
+		widget.NewToolbarAction(theme.ContentPasteIcon(), func() {}),
+		widget.NewToolbarSpacer(),
+		widget.NewToolbarAction(theme.HelpIcon(), func() {
+			log.Println("Display help")
+		}),
+	)
+
+	menueBar := container.NewHSplit(layout.NewSpacer(), t)
+	menueBar.SetOffset(1.0)
+
+	return menueBar
+}
+
+func createCourseButtons() []*widget.Button {
+
+	courses := model.GetAllCourses()
+	courseButtons := make([]*widget.Button, 0)
+
+	for _, v := range courses {
+		b := widget.NewButton(v.Path, func() {})
+		courseButtons = append(courseButtons, b)
 	}
 
-	return courses
+	return courseButtons
+}
+
+func createSemesterButtons(coursePath string) []*widget.Button {
+
+	semesters := model.GetAllSemestersForCourse(coursePath)
+	semesterButtons := make([]*widget.Button, 0)
+
+	for _, v := range semesters {
+		b := widget.NewButton(v.Path, func() {})
+		semesterButtons = append(semesterButtons, b)
+	}
+
+	return semesterButtons
 }

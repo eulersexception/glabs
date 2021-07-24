@@ -1,31 +1,31 @@
 package util
 
 import (
-	"fyne.io/fyne"
-	"fyne.io/fyne/layout"
-	"fyne.io/fyne/theme"
-	"fyne.io/fyne/widget"
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/theme"
+	"fyne.io/fyne/v2/widget"
 )
 
 var dialogButtonSize = fyne.NewSize(80, 30)
 var dialogWindowSize = fyne.NewSize(400, 150)
 
-func MakeCloseButton(tc *widget.TabContainer) *widget.Button {
+func MakeCloseButton() *widget.Button {
 	closeButton := widget.NewButton("Schließen", func() {
-		tc.Remove(tc.CurrentTab())
-		tc.SelectTabIndex(0)
+
 	})
 
 	return closeButton
 }
 
-func MakeButtonGroup(left *widget.Button, right *widget.Button) *widget.SplitContainer {
-	return widget.NewHSplitContainer(left, right)
+func MakeButtonGroup(left *widget.Button, right *widget.Button) *container.Split {
+	return container.NewHSplit(left, right)
 }
 
-func MakeScrollableView(body *widget.ScrollContainer, buttons *widget.SplitContainer) *fyne.Container {
-	mainWindowSize := GetMainWindow().Content().Size()
-	body.SetMinSize(fyne.NewSize(int(float64(mainWindowSize.Width)*0.8), int(float64(mainWindowSize.Height)*0.8)))
+func MakeScrollableView(body *container.Scroll, buttons *container.Scroll) *fyne.Container {
+	//mainWindowSize := GetMainWindow().Content().Size()
+	body.SetMinSize(fyne.NewSize(5, 10))
 	return fyne.NewContainerWithLayout(layout.NewVBoxLayout(), body, layout.NewSpacer(), buttons)
 }
 
@@ -43,8 +43,8 @@ func MakeCancelButtonForDialog(mainWindow fyne.Window, currentWindow fyne.Window
 			warningMessageWindow.Close()
 			currentWindow.RequestFocus()
 		})
-		buttonBox := widget.NewHSplitContainer(ok, cancel)
-		container := widget.NewVBox(layout.NewSpacer(), warningBox, layout.NewSpacer(), buttonBox)
+		buttonBox := container.NewHSplit(ok, cancel)
+		container := container.NewVBox(layout.NewSpacer(), warningBox, layout.NewSpacer(), buttonBox)
 		warningMessageWindow.SetContent(container)
 		warningMessageWindow.Resize(dialogWindowSize)
 		warningMessageWindow.CenterOnScreen()

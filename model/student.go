@@ -10,8 +10,6 @@ import (
 	util "github.com/eulersexception/glabs-ui/util"
 )
 
-// Student - Id (Matrikelnummer) is the primary key. All fields are public and
-// Getter or Setter functions relate to database operations.
 type Student struct {
 	StudentID  int64 `ql:"index xID"`
 	MatrikelNr int64 `ql:"uindex xMatrikelNr"`
@@ -21,10 +19,6 @@ type Student struct {
 	Email      string
 }
 
-// NewStudent creates a new student and stores the object in DB.
-// Arguments id of type uint32 and strings for name and firstName must not be empty and a well formed email must be provided.
-// If a student with given id exists already in DB, the existing dataset will be overwritten.
-// Returns a pointer to a new student and a message string. If provided arguments are invalid the message will not be empty.
 func NewStudent(name string, firstName string, nickName string, email string, matrikelNr int64) (*Student, string) {
 	if name == "" || firstName == "" {
 		res := "\n+++ Enter valid name or first name.\n"
@@ -56,8 +50,6 @@ func NewStudent(name string, firstName string, nickName string, email string, ma
 	return stud, ""
 }
 
-// Mail checks if the given string is a well formed email address.
-// Returns true or false.
 func Mail(email string) bool {
 	if util.IsValidMail(email) {
 		return true
@@ -66,13 +58,10 @@ func Mail(email string) bool {
 	}
 }
 
-// GetMail of student.
-// Returns email string.
 func (s *Student) GetMail() string {
 	return s.Email
 }
 
-// This function updates student record in DB. An update could be a creation or edition of a record.
 func (s *Student) setStudent() {
 	db := util.GetDB()
 
@@ -90,8 +79,6 @@ func (s *Student) setStudent() {
 	util.FlushAndClose(db)
 }
 
-// GetStudent fetches student from DB with an argument of type int64 as Matrikelnr.
-// Returns an error if fetch fails or a pointer to the student.
 func GetStudent(matrikelNr int64) *Student {
 	db := util.GetDB()
 	defer util.FlushAndClose(db)
@@ -128,8 +115,6 @@ func GetStudent(matrikelNr int64) *Student {
 	return s
 }
 
-// DeleteStudent removes a student by id (uint64) from DB.
-// Returns an error if operation fails.
 func DeleteStudent(matrikelNr int64) {
 	db := util.GetDB()
 	defer util.FlushAndClose(db)
@@ -144,8 +129,6 @@ func DeleteStudent(matrikelNr int64) {
 	}
 }
 
-// UpdateStudent changes a students record in DB.
-// Returns an error if the update fails.
 func (s *Student) UpdateStudent() {
 	db := util.GetDB()
 	defer util.FlushAndClose(db)
@@ -161,7 +144,6 @@ func (s *Student) UpdateStudent() {
 	}
 }
 
-// PrintData outputs a human readable string for students data.
 func (s *Student) PrintData() {
 	fmt.Printf("\n-------------------\nName:\t\t%s %s\nNick:\t\t%s\nMailTo:\t\t%s\nId:\t\t%d\n",
 		s.FirstName, s.Name, s.NickName, s.Email, s.MatrikelNr)
@@ -174,9 +156,6 @@ func (fst *Student) Equals(scd *Student) bool {
 	return fst.MatrikelNr == scd.MatrikelNr && fst.Email == scd.Email && fst.Name == scd.Name && fst.FirstName == scd.FirstName
 }
 
-// JoinTeam adds student to team.
-// Expects the team name (string).
-// Returns an error if the team doesn't exist otherwise nil (succesful operation).
 func (s Student) JoinTeam(team string) {
 	NewStudentTeam(s.MatrikelNr, team)
 }

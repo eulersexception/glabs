@@ -44,7 +44,7 @@ func GetTeamsForStudent(matrikelNr int64) []*Team {
 		panic(e)
 	}
 
-	entries := make([]StudentTeam, 0)
+	entries := make([]*StudentTeam, 0)
 
 	for _, rs := range rss {
 		s := &StudentTeam{}
@@ -55,7 +55,7 @@ func GetTeamsForStudent(matrikelNr int64) []*Team {
 				return false, err
 			}
 
-			entries = append(entries, *s)
+			entries = append(entries, s)
 			return true, nil
 		}); er != nil {
 			panic(er)

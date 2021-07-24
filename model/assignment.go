@@ -178,6 +178,42 @@ func (a *Assignment) UpdateAssignment() {
 	}
 }
 
+func GetAllAssignmentsForSemester(semesterPath string) []*Assignment {
+	db := util.GetDB()
+
+	rss, _, e := db.Run(DB.NewRWCtx(), `
+		SELECT * FROM Assignment
+		WHERE SemesterPath = $1;
+	`, semesterPath)
+
+	if e != nil {
+		panic(e)
+	}
+
+	assignments := make([]*Assignment, 0)
+
+	for _, rs := range rss {
+		a := &Assignment{}
+
+		if er := rs.Do(false, func(data []interface{}) (bool, error) {
+
+			if err := DB.Unmarshal(a, data); err != nil {
+				return false, err
+			}
+
+			assignments = append(assignments, a)
+
+			return true, nil
+		}); er != nil {
+			panic(er)
+		}
+	}
+
+	util.FlushAndClose(db)
+
+	return assignments
+}
+
 func (as *Assignment) AddTeam(name string) {
 	NewTeamAssignment(name, as.AssignmentPath)
 }

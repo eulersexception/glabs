@@ -9,18 +9,12 @@ import (
 	DB "modernc.org/ql"
 )
 
-// Team - Name is the primary key. All fields are public an
 
-// Getter or Setter functions relate to database operations.
 type Team struct {
 	TeamID int64  `ql:"index xID"`
 	Name   string `ql:"uindex xName, name TeamName"`
 }
 
-// NewTeam creates a new team and stores the object in DB.
-// String argument for name must not be empty.
-// If a team with given name exists already in DB, the existing dataset will be overwritten.
-// Returns a new teamo.
 func NewTeam(name string) (*Team, string) {
 	if name == "" {
 		res := "\n+++ Enter valid team name."
@@ -51,8 +45,6 @@ func (t *Team) RemoveStudent(s *Student) {
 	RemoveStudentFromTeam(s.MatrikelNr, t.Name)
 }
 
-// UpdateTeam changes a teams record in DB.
-// Returns an error if the update fails.
 func (t *Team) UpdateTeam(newName string) {
 	db := util.GetDB()
 	defer util.FlushAndClose(db)
@@ -68,8 +60,6 @@ func (t *Team) UpdateTeam(newName string) {
 	}
 }
 
-// This function updates team record in DB.
-// An update could be a creation or edition of a record.
 func (t *Team) setTeam() {
 	db := util.GetDB()
 	defer util.FlushAndClose(db)
@@ -87,8 +77,6 @@ func (t *Team) setTeam() {
 	}
 }
 
-// GetTeam fetches team from DB with an argument of type string as name.
-// Returns an error if fetch fails or a pointer to the Team.
 func GetTeam(name string) *Team {
 	db := util.GetDB()
 	defer util.FlushAndClose(db)
@@ -122,8 +110,6 @@ func GetTeam(name string) *Team {
 	return t
 }
 
-// DeleteTeam removes a team by name (string) from DB.
-// Returns an error if operation fails.
 func DeleteTeam(name string) {
 	db := util.GetDB()
 	defer util.FlushAndClose(db)

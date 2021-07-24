@@ -1,47 +1,36 @@
 package main
 
 import (
-	//view "github.com/eulersexception/glabs-ui/view"
-	"fmt"
 
-	"github.com/eulersexception/glabs-ui/model"
-	//db "modernc.org/ql"
+	// "fyne.io/fyne/v2"
+
+	model "github.com/eulersexception/glabs-ui/model"
 )
 
+var starter = &model.StarterCode{
+	Url:             "git@gitlab.lrz.de:vss/startercode/startercodeB1.git",
+	FromBranch:      "ws20.1",
+	ProtectToBranch: true,
+}
+
+var clone = &model.Clone{
+	LocalPath: "/Users/obraun/lectures/vss/labs/gitlab/semester/ob-20ws/blatt1",
+	Branch:    "develop",
+}
+
+var a = &model.Assignment{
+	AssignmentPath:    "blatt1",
+	SemesterPath:      "semester/ob-20ws",
+	Per:               "group",
+	Description:       "Blatt 1, Verteilte Softwaresysteme, WS 20/21",
+	ContainerRegistry: true,
+	LocalPath:         clone.LocalPath,
+	StarterUrl:        starter.Url,
+}
+
 func main() {
-	s1, _ := model.NewStudent("a", "b", "ab", "ab@mail.com", 33)
-	s2, _ := model.NewStudent("c", "d", "cd", "cd@mail.com", 44)
-	s3, _ := model.NewStudent("e", "f", "ef", "ef@mail.com", 55)
 
-	t1, _ := model.NewTeam("Team1")
-	t2, _ := model.NewTeam("Team2")
-	t3, _ := model.NewTeam("Team3")
+	model.CreateTables()
+	model.InitData()
 
-	model.NewStudentTeam(s1.MatrikelNr, t1.Name)
-	model.NewStudentTeam(s2.MatrikelNr, t1.Name)
-	model.NewStudentTeam(s3.MatrikelNr, t1.Name)
-
-	model.NewStudentTeam(s1.MatrikelNr, t2.Name)
-	model.NewStudentTeam(s1.MatrikelNr, t3.Name)
-
-	teams := model.GetTeamsForStudent(s1.MatrikelNr)
-
-	for _, v := range teams {
-		fmt.Printf("teams - main.go 27 = %v\n", v)
-	}
-
-	studs := model.GetStudentsForTeam(t1.Name)
-
-	for _, v := range studs {
-		fmt.Printf("students - main.go 36 = %v\n", v)
-	}
-
-	model.DeleteStudent(s1.MatrikelNr)
-
-	teams = model.GetTeamsForStudent(s1.MatrikelNr)
-
-	fmt.Println("Teams array after deleting s1")
-	for _, v := range teams {
-		fmt.Printf("teams - main.go 34 = %v\n", v)
-	}
 }

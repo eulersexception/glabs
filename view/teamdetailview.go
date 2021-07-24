@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	glabsmodel "github.com/eulersexception/glabs-ui/model"
-	glabsutil "github.com/eulersexception/glabs-ui/util"
 
 	"fyne.io/fyne"
 	"fyne.io/fyne/widget"
@@ -22,16 +21,7 @@ func NewTeamDetailView(team *glabsmodel.Team, tc *widget.TabContainer) *TeamDeta
 		Team:         team,
 	}
 
-	group := widget.NewGroup(fmt.Sprintf("Details %s", t.Team.Name))
-	label := widget.NewLabel(fmt.Sprintf("Beschreibung:\nDas ist Assignment von %s", t.Team.Name))
-	group.Append(label)
-	body := widget.NewVScrollContainer(group)
-
-	left := makeButtonForStudentsOverview(tc, t.Team)
-	right := glabsutil.MakeCloseButton(tc)
-	buttons := glabsutil.MakeButtonGroup(left, right)
-
-	t.Container = glabsutil.MakeScrollableView(body, buttons)
+	//t.Container = glabsutil.MakeScrollableView(body, buttons)
 
 	return t
 }

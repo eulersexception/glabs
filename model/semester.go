@@ -108,3 +108,40 @@ func (s *Semester) UpdateSemester(course string) {
 		panic(err)
 	}
 }
+
+func GetAllSemestersForCourse(coursePath string) []*Semester {
+	db := util.GetDB()
+
+	rss, _, e := db.Run(DB.NewRWCtx(), `
+		SELECT * FROM Semester
+		WHERE CoursePath = $1;
+		`, coursePath)
+
+	if e != nil {
+		panic(e)
+	}
+
+	semesters := make([]*Semester, 0)
+
+	for _, rs := range rss {
+
+		s := &Semester{}
+
+		if er := rs.Do(false, func(data []interface{}) (bool, error) {
+
+			if err := DB.Unmarshal(s, data); err != nil {
+				return false, nil
+			}
+
+			semesters = append(semesters, s)
+
+			return true, nil
+		}); er != nil {
+			panic(er)
+		}
+	}
+
+	defer util.FlushAndClose(db)
+
+	return semesters
+}

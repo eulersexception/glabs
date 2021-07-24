@@ -88,3 +88,51 @@ func DeleteSemesterFromCourse(path string) {
 		panic(err)
 	}
 }
+
+func (c *Course) AddSemesterToCourse(path string) {
+	db := util.GetDB()
+	defer util.FlushAndClose(db)
+
+	_, _, err := db.Run(DB.NewRWCtx(), `
+		BEGIN TRANSACTION;
+			UPDATE Semester CoursePath = $1 WHERE SemesterPath = $2;
+		COMMIT;
+	`, c.Path, path)
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+func GetAllCourses() []*Course {
+	db := util.GetDB()
+
+	rss, _, e := db.Run(nil, `SELECT * FROM Course;`)
+
+	if e != nil {
+		panic(e)
+	}
+
+	courses := make([]*Course, 0)
+
+	for _, rs := range rss {
+		c := &Course{}
+
+		if er := rs.Do(false, func(data []interface{}) (bool, error) {
+
+			if err := DB.Unmarshal(c, data); err != nil {
+				return false, err
+			}
+
+			courses = append(courses, c)
+
+			return true, nil
+		}); er != nil {
+			panic(er)
+		}
+	}
+
+	defer util.FlushAndClose(db)
+
+	return courses
+}
