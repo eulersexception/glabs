@@ -9,7 +9,6 @@ import (
 	DB "modernc.org/ql"
 )
 
-
 type Team struct {
 	TeamID int64  `ql:"index xID"`
 	Name   string `ql:"uindex xName, name TeamName"`

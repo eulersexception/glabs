@@ -104,7 +104,7 @@ func (c *Course) AddSemesterToCourse(path string) {
 	}
 }
 
-func GetAllCourses() []*Course {
+func GetAllCourses() []Course {
 	db := util.GetDB()
 
 	rss, _, e := db.Run(nil, `SELECT * FROM Course;`)
@@ -113,7 +113,7 @@ func GetAllCourses() []*Course {
 		panic(e)
 	}
 
-	courses := make([]*Course, 0)
+	courses := make([]Course, 0)
 
 	for _, rs := range rss {
 		c := &Course{}
@@ -124,7 +124,7 @@ func GetAllCourses() []*Course {
 				return false, err
 			}
 
-			courses = append(courses, c)
+			courses = append(courses, *c)
 
 			return true, nil
 		}); er != nil {

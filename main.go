@@ -1,36 +1,27 @@
 package main
 
 import (
+	// "time"
+	// "fmt"
+	"os"
 
-	// "fyne.io/fyne/v2"
-
-	model "github.com/eulersexception/glabs-ui/model"
+	"fyne.io/fyne/v2/app"
+	"github.com/eulersexception/glabs-ui/model"
+	"github.com/eulersexception/glabs-ui/util"
+	"github.com/eulersexception/glabs-ui/view"
 )
-
-var starter = &model.StarterCode{
-	Url:             "git@gitlab.lrz.de:vss/startercode/startercodeB1.git",
-	FromBranch:      "ws20.1",
-	ProtectToBranch: true,
-}
-
-var clone = &model.Clone{
-	LocalPath: "/Users/obraun/lectures/vss/labs/gitlab/semester/ob-20ws/blatt1",
-	Branch:    "develop",
-}
-
-var a = &model.Assignment{
-	AssignmentPath:    "blatt1",
-	SemesterPath:      "semester/ob-20ws",
-	Per:               "group",
-	Description:       "Blatt 1, Verteilte Softwaresysteme, WS 20/21",
-	ContainerRegistry: true,
-	LocalPath:         clone.LocalPath,
-	StarterUrl:        starter.Url,
-}
 
 func main() {
 
+	util.InitLoggers()
 	model.CreateTables()
 	model.InitData()
-
+	myApp := app.New()
+	myWindow := myApp.NewWindow("Glabs")
+	view.CreateHomeView(myWindow)
+	model.DropTables()
+	//curTime := fmt.Sprintf("logs_%s", time.Now().String())
+	//curTime = curTime[:24]
+	// os.Rename("logs.txt", curTime)
+	os.Remove("logs.txt")
 }

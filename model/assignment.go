@@ -3,9 +3,8 @@ package model
 import (
 	"fmt"
 
-	DB "modernc.org/ql"
-
 	util "github.com/eulersexception/glabs-ui/util"
+	DB "modernc.org/ql"
 )
 
 type Assignment struct {
@@ -178,7 +177,7 @@ func (a *Assignment) UpdateAssignment() {
 	}
 }
 
-func GetAllAssignmentsForSemester(semesterPath string) []*Assignment {
+func GetAllAssignmentsForSemester(semesterPath string) []Assignment {
 	db := util.GetDB()
 
 	rss, _, e := db.Run(DB.NewRWCtx(), `
@@ -190,7 +189,7 @@ func GetAllAssignmentsForSemester(semesterPath string) []*Assignment {
 		panic(e)
 	}
 
-	assignments := make([]*Assignment, 0)
+	assignments := make([]Assignment, 0)
 
 	for _, rs := range rss {
 		a := &Assignment{}
@@ -201,7 +200,7 @@ func GetAllAssignmentsForSemester(semesterPath string) []*Assignment {
 				return false, err
 			}
 
-			assignments = append(assignments, a)
+			assignments = append(assignments, *a)
 
 			return true, nil
 		}); er != nil {

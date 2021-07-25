@@ -109,7 +109,7 @@ func (s *Semester) UpdateSemester(course string) {
 	}
 }
 
-func GetAllSemestersForCourse(coursePath string) []*Semester {
+func GetAllSemestersForCourse(coursePath string) []Semester {
 	db := util.GetDB()
 
 	rss, _, e := db.Run(DB.NewRWCtx(), `
@@ -121,7 +121,7 @@ func GetAllSemestersForCourse(coursePath string) []*Semester {
 		panic(e)
 	}
 
-	semesters := make([]*Semester, 0)
+	semesters := make([]Semester, 0)
 
 	for _, rs := range rss {
 
@@ -133,7 +133,7 @@ func GetAllSemestersForCourse(coursePath string) []*Semester {
 				return false, nil
 			}
 
-			semesters = append(semesters, s)
+			semesters = append(semesters, *s)
 
 			return true, nil
 		}); er != nil {

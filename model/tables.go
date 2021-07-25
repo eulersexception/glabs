@@ -99,7 +99,7 @@ func InitData() {
 	vssSem2 := NewSemester(vss.Path, "semester/ob-21ss")
 	seSem1 := NewSemester(se.Path, "semester/rs-20ws")
 	seSem2 := NewSemester(se.Path, "semester/rs-21ss")
-	algoDatSem1 := NewSemester(algoDat.Path, "semester/ob-20ws")
+	algoDatSem1 := NewSemester(algoDat.Path, "semester/ob-19ws")
 
 	// Dummy assignments
 	vssSem1Blatt1, _ := NewAssignment("vssSem1Blatt1",
