@@ -17,8 +17,7 @@ func main() {
 	model.CreateTables()
 	model.InitData()
 	myApp := app.New()
-	myWindow := myApp.NewWindow("Glabs")
-	view.CreateHomeView(myWindow)
+	view.CreateHomeView(myApp)
 	model.DropTables()
 	//curTime := fmt.Sprintf("logs_%s", time.Now().String())
 	//curTime = curTime[:24]

@@ -5,5 +5,7 @@
 *.vlog
 *.sst
 
+.VSCodeCounter
+logs.txt
 
 
