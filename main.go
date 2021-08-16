@@ -3,7 +3,8 @@ package main
 import (
 	// "time"
 	// "fmt"
-	"os"
+
+	//"log"
 
 	"fyne.io/fyne/v2/app"
 	"github.com/eulersexception/glabs-ui/model"
@@ -19,8 +20,9 @@ func main() {
 	myApp := app.New()
 	view.CreateHomeView(myApp)
 	model.DropTables()
+
 	//curTime := fmt.Sprintf("logs_%s", time.Now().String())
 	//curTime = curTime[:24]
 	// os.Rename("logs.txt", curTime)
-	os.Remove("logs.txt")
+	//os.Remove("logs.txt")
 }

@@ -74,18 +74,40 @@ func GetCourse(path string) *Course {
 	return c
 }
 
-func DeleteSemesterFromCourse(path string) {
+func UpdateCourse(oldPath string, newPath string) {
 	db := util.GetDB()
 	defer util.FlushAndClose(db)
 
 	_, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
+			UPDATE Course CoursePath = $1 WHERE CoursePath = $2;
+			UPDATE Semester CoursePath = $1 WHERE CoursePath = $2;
+		COMMIT;
+	`, newPath, oldPath)
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+func DeleteCourse(path string) {
+	semesters := GetAllSemestersForCourse(path)
+
+	if len(semesters) > 0 {
+		util.WarningLogger.Printf("Trying to delete course on path %s with existing references to semesters. First update course path on related semesters or delete related semesters.\n", path)
+	} else {
+		db := util.GetDB()
+		defer util.FlushAndClose(db)
+
+		_, _, err := db.Run(DB.NewRWCtx(), `
+		BEGIN TRANSACTION;
 			DELETE FROM Course WHERE CoursePath = $1;
 		COMMIT;
 	`, path)
 
-	if err != nil {
-		panic(err)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 

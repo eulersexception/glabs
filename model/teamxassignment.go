@@ -32,7 +32,7 @@ func NewTeamAssignment(name string, path string) {
 	}
 }
 
-func GetAssignmentsForTeam(name string) []*Assignment {
+func GetAssignmentsForTeam(name string) []Assignment {
 	db := util.GetDB()
 
 	rss, _, e := db.Run(DB.NewRWCtx(), `
@@ -65,21 +65,21 @@ func GetAssignmentsForTeam(name string) []*Assignment {
 
 	util.FlushAndClose(db)
 
-	assignments := make([]*Assignment, 0)
+	assignments := make([]Assignment, 0)
 
 	for _, v := range entries {
-		assignments = append(assignments, GetAssignment(v.AssignmentPath))
+		a := GetAssignment(v.AssignmentPath)
+		assignments = append(assignments, *a)
 	}
 
 	return assignments
 }
 
-func GetTeamsForAssignment(path string) []*Team {
+func GetTeamsForAssignment(path string) []Team {
 	db := util.GetDB()
 
 	rss, _, e := db.Run(DB.NewRWCtx(), `
-			SELECT NamePath, TeamName, AssignmentPath 
-			FROM TeamAssignment 
+			SELECT * FROM TeamAssignment 
 			WHERE AssignmentPath = $1;
 		`, path)
 
@@ -98,6 +98,8 @@ func GetTeamsForAssignment(path string) []*Team {
 				return false, err
 			}
 
+			//util.WarningLogger.Printf("Teamassignment: a = %s, t = %s\n", t.AssignmentPath, t.TeamName)
+
 			entries = append(entries, *t)
 			return true, nil
 		}); er != nil {
@@ -107,10 +109,12 @@ func GetTeamsForAssignment(path string) []*Team {
 
 	util.FlushAndClose(db)
 
-	teams := make([]*Team, 0)
+	teams := make([]Team, 0)
 
 	for _, v := range entries {
-		teams = append(teams, GetTeam(v.TeamName))
+		// util.WarningLogger.Printf("Teamassignment:  t = %s\n", v.TeamName)
+		team := GetTeam(v.TeamName)
+		teams = append(teams, *team)
 	}
 
 	return teams
@@ -129,5 +133,53 @@ func RemoveTeamFromAssignment(name string, path string) {
 
 	if err != nil {
 		panic(err)
+	}
+}
+
+func RemoveAssignmentsForTeam(name string) {
+	db := util.GetDB()
+	defer util.FlushAndClose(db)
+
+	_, _, err := db.Run(DB.NewRWCtx(), `
+		BEGIN TRANSACTION;
+			DELETE FROM TeamAssignment WHERE TeamName = $1;
+		COMMIT;
+	`, name)
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+func UpdateTeamForAssignments(oldName string, newName string) {
+	assignments := GetAssignmentsForTeam(oldName)
+	RemoveAssignmentsForTeam(oldName)
+
+	for _, v := range assignments {
+		NewTeamAssignment(newName, v.AssignmentPath)
+	}
+}
+
+func RemoveTeamsForAssignment(path string) {
+	db := util.GetDB()
+	defer util.FlushAndClose(db)
+
+	_, _, err := db.Run(DB.NewRWCtx(), `
+		BEGIN TRANSACTION;
+			DELETE FROM TeamAssignment WHERE AssignmentPath = $1;
+		COMMIT;
+	`, path)
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+func UpdateAssignmentForTeams(oldPath string, newPath string) {
+	teams := GetTeamsForAssignment(oldPath)
+	RemoveTeamsForAssignment(oldPath)
+
+	for _, v := range teams {
+		NewTeamAssignment(v.Name, newPath)
 	}
 }

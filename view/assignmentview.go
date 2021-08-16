@@ -2,15 +2,17 @@ package view
 
 import (
 	"fmt"
-	"image/color"
+	"strconv"
 
+	"github.com/eulersexception/glabs-ui/model"
 	glabsmodel "github.com/eulersexception/glabs-ui/model"
-	"github.com/eulersexception/glabs-ui/util"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -19,131 +21,175 @@ type AssignmentView struct {
 	Assignment *glabsmodel.Assignment
 }
 
-func NewAssignmentView(a *glabsmodel.Assignment) *AssignmentView {
+func NewAssignmentView(assignment *glabsmodel.Assignment) *AssignmentView {
 
 	aView := &AssignmentView{
-		Assignment: a,
+		Assignment: assignment,
 	}
 
-	title := widget.NewLabel("Assignment Info")
-	sepLine := canvas.NewLine(color.White)
+	a := model.GetAssignment(assignment.AssignmentPath)
 
-	assignmentLabel := widget.NewLabel("Assignment Path:")
-	assignment := widget.NewLabel(a.AssignmentPath)
+	aPathLabel := widget.NewLabel("AssignmentPath:")
+	aPathStr := binding.NewString()
+	aPathStr.Set(a.AssignmentPath)
 
-	semesterLabel := widget.NewLabel("Semester Path:")
-	semester := widget.NewLabel(a.SemesterPath)
+	aPathValue := widget.NewLabelWithData(aPathStr)
 
-	perLabel := widget.NewLabel("Per:")
-	per := widget.NewLabel(a.Per)
+	aSemPathLabel := widget.NewLabel("SemesterPath:")
+	aSemPathStr := binding.NewString()
+	aSemPathStr.Set(a.SemesterPath)
+	aSemPathValue := widget.NewLabelWithData(aSemPathStr)
 
-	descriptionLabel := widget.NewLabel("Description:")
-	description := widget.NewLabel(a.Description)
+	aPerLabel := widget.NewLabel("Per:")
+	aPerStr := binding.NewString()
+	aPerStr.Set(a.Per)
+	aPerValue := widget.NewLabelWithData(aPerStr)
 
-	registryLabel := widget.NewLabel("Container Registry:")
-	registry := widget.NewLabel(fmt.Sprintf("%v", a.ContainerRegistry))
+	aDescLabel := widget.NewLabel("Description:")
+	aDescStr := binding.NewString()
+	aDescStr.Set(a.Description)
+	aDescValue := widget.NewLabelWithData(aDescStr)
 
-	starterLabel := widget.NewLabel("Starter Code:")
-	starterContainer := container.NewVBox()
-	var starterCode *widget.Button
+	aContRegLabel := widget.NewLabel("ContainerRegistry:")
+	aContRegBool := binding.NewBool()
+	aContRegBool.Set(a.ContainerRegistry)
+	aContRegValue := widget.NewLabelWithData(binding.BoolToString(aContRegBool))
 
-	starterCode = widget.NewButton(a.StarterUrl, func() {
-		starter := glabsmodel.GetStarterCode(a.StarterUrl)
+	aStarterCodeLabel := widget.NewLabel("StarterCode:")
+	aStarterCodeValue := widget.NewButton(a.StarterUrl, func() {})
 
-		urlLabel := widget.NewLabel("Starter Code URL:")
-		url := widget.NewLabel(starter.Url)
+	aCloneLabel := widget.NewLabel("Clone:")
+	aCloneValue := widget.NewButton(a.LocalPath, func() {})
 
-		fromBranchLabel := widget.NewLabel("From Branch:")
-		fromBranch := widget.NewLabel(starter.FromBranch)
+	labels := container.NewVBox(aPathLabel, aSemPathLabel, aPerLabel, aDescLabel, aContRegLabel, aStarterCodeLabel, aCloneLabel)
+	values := container.NewVBox(aPathValue, aSemPathValue, aPerValue, aDescValue, aContRegValue, aStarterCodeValue, aCloneValue)
 
-		protectLabel := widget.NewLabel("Protect to Branch:")
-		protect := widget.NewLabel(fmt.Sprintf("%v", starter.ProtectToBranch))
+	editButton := widget.NewButton("Edit", func() {
+		// editLabels := container.NewVBox(aPathLabel, aSemPathLabel, aPerLabel, aDescLabel, aContRegLabel, aStarterCodeLabel, aCloneLabel)
+		pathEntry := widget.NewEntryWithData(aPathStr)
+		pathEntry.SetPlaceHolder(aPathValue.Text)
+		editPath := widget.NewFormItem(aPathLabel.Text, pathEntry)
 
-		starterLabels := container.NewVBox(urlLabel, fromBranchLabel, protectLabel)
-		starterValues := container.NewVBox(url, fromBranch, protect)
+		semPathEntry := widget.NewEntryWithData(aSemPathStr)
+		semPathEntry.SetPlaceHolder(aSemPathValue.Text)
+		editSemPath := widget.NewFormItem(aSemPathLabel.Text, semPathEntry)
 
-		starterData := container.NewHBox(starterLabels, starterValues)
-		starterContainer.Add(starterData)
+		perEntry := widget.NewEntryWithData(aPerStr)
+		perEntry.SetPlaceHolder(aPerValue.Text)
+		editPer := widget.NewFormItem(aPerLabel.Text, perEntry)
 
-		var hide *widget.Button
+		descEntry := widget.NewEntryWithData(aDescStr)
+		descEntry.SetPlaceHolder(aDescValue.Text)
+		editDesc := widget.NewFormItem(aDescLabel.Text, descEntry)
 
-		hide = widget.NewButton("Hide", func() {
-			starterData.Hide()
-			hide.Hide()
-			starterCode.Show()
+		contRegRadioButtons := widget.NewRadioGroup([]string{"true", "false"}, func(choice string) {
+			b, _ := strconv.ParseBool(choice)
+			aContRegBool.Set(b)
+		})
+		contRegRadioButtons.SetSelected(aContRegValue.Text)
+		editContReg := widget.NewFormItem(aContRegLabel.Text, contRegRadioButtons)
+
+		starterEntry := widget.NewEntry()
+		starterEntry.SetPlaceHolder(aStarterCodeValue.Text)
+		editStarterCode := widget.NewFormItem(aStarterCodeLabel.Text, starterEntry)
+
+		cloneEntry := widget.NewEntry()
+		cloneEntry.SetPlaceHolder(aContRegValue.Text)
+		editClone := widget.NewFormItem(aCloneLabel.Text, cloneEntry)
+
+		editForm := widget.NewForm(editPath, editSemPath, editPer, editDesc, editContReg, editStarterCode, editClone)
+		editWindow := fyne.CurrentApp().NewWindow(fmt.Sprintf("Edit %s", aPathValue.Text))
+
+		cancelButton := widget.NewButton("Abbrechen", func() {
+			var editModal *widget.PopUp
+			warning := canvas.NewText("Eingabe abbrechen? Erfasste Daten werden nicht gespeichert", theme.TextColor())
+			no := widget.NewButton("Nein", func() {
+				editModal.Hide()
+			})
+			yes := widget.NewButton("Ja", func() {
+				// TODO: Add cancel logic to reset fields
+				aPathStr.Set(a.AssignmentPath)
+				aSemPathStr.Set(a.SemesterPath)
+				aPerStr.Set(a.Per)
+				aDescStr.Set(a.Description)
+				aContRegBool.Set(a.ContainerRegistry)
+
+				editWindow.Close()
+			})
+
+			buttonGroup := container.NewHBox(yes, no)
+			cancelContent := container.NewBorder(warning, buttonGroup, nil, nil)
+			editModal = widget.NewModalPopUp(cancelContent, editWindow.Canvas())
+			editModal.Show()
 		})
 
-		starterContainer.Add(hide)
-		starterCode.Hide()
-	})
+		saveButton := widget.NewButton("Speichern", func() {
+			var editModal *widget.PopUp
+			warning := canvas.NewText("Eingabe sichern? Erfasste Daten werden gespeichert", theme.TextColor())
+			no := widget.NewButton("Nein", func() {
+				editModal.Hide()
+			})
+			yes := widget.NewButton("Ja", func() {
+				newPath := pathEntry.Text
+				newSemPath := semPathEntry.Text
+				newPer := perEntry.Text
+				newDesc := descEntry.Text
+				newContReg, _ := strconv.ParseBool(contRegRadioButtons.Selected)
+				// TODO: implement value extraction logic for starter code and clone
 
-	starterContainer.Add(starterCode)
+				aPathStr.Set(newPath)
+				aSemPathStr.Set(newSemPath)
+				aPerStr.Set(newPer)
+				aDescStr.Set(newDesc)
+				aContRegBool.Set(newContReg)
 
-	cloneLabel := widget.NewLabel("Clone:")
-	cloneContainer := container.NewVBox()
-	var clone *widget.Button
+				if newPath != a.AssignmentPath {
+					model.UpdateAssignmentPath(a.AssignmentPath, newPath)
+				}
 
-	clone = widget.NewButton(a.LocalPath, func() {
-		innerClone := glabsmodel.GetClone(a.LocalPath)
+				newAssignment := &model.Assignment{
+					AssignmentPath:    newPath,
+					SemesterPath:      newSemPath,
+					Per:               newPer,
+					Description:       newDesc,
+					ContainerRegistry: newContReg,
+					StarterUrl:        aStarterCodeValue.Text,
+					LocalPath:         aCloneValue.Text,
+				}
 
-		pathLabel := widget.NewLabel("Local Path:")
-		path := widget.NewLabel(innerClone.LocalPath)
+				newAssignment.UpdateAssignment()
 
-		branchLabel := widget.NewLabel("Branch:")
-		branch := widget.NewLabel(innerClone.Branch)
+				for _, v := range fyne.CurrentApp().Driver().AllWindows() {
+					v.Content().Refresh()
+				}
 
-		cloneLabels := container.NewVBox(pathLabel, branchLabel)
-		cloneValues := container.NewVBox(path, branch)
+				editWindow.Close()
+			})
 
-		cloneData := container.NewHBox(cloneLabels, cloneValues)
-		cloneContainer.Add(cloneData)
-
-		var hide *widget.Button
-
-		hide = widget.NewButton("Hide", func() {
-			cloneData.Hide()
-			hide.Hide()
-			clone.Show()
+			buttonGroup := container.NewHBox(yes, no)
+			cancelContent := container.NewBorder(warning, buttonGroup, nil, nil)
+			editModal = widget.NewModalPopUp(cancelContent, editWindow.Canvas())
+			editModal.Show()
 		})
 
-		cloneContainer.Add(hide)
-		clone.Hide()
+		buttons := container.NewHBox(layout.NewSpacer(), cancelButton, saveButton, layout.NewSpacer())
+		editContent := container.NewBorder(editForm, buttons, nil, nil)
+
+		editWindow.SetContent(editContent)
+		editWindow.Resize(fyne.NewSize(800, 400))
+		editWindow.Show()
 	})
 
-	cloneContainer.Add(clone)
+	labelsValues := container.NewHBox(labels, values)
 
-	labels := container.NewVBox(assignmentLabel, semesterLabel, perLabel, descriptionLabel, registryLabel, starterLabel, cloneLabel)
-	values := container.NewVBox(assignment, semester, per, description, registry, starterContainer, cloneContainer)
+	teamsButton := widget.NewButton("Teams", func() {
+		w := CreateNewTeamView(a)
+		w.Show()
+	})
 
-	data := container.NewHBox(labels, values)
+	buttons := container.NewVBox(editButton, teamsButton)
 
-	left := MakeEditButton(a, *semester, *per, *description)
-	right := util.MakeCloseButton()
-	buttons := util.MakeButtonGroup(left, right)
-
-	content := container.NewVBox(title, sepLine, data, layout.NewSpacer(), sepLine, buttons)
-
-	aView.Content = content
+	aView.Content = container.NewBorder(labelsValues, buttons, nil, nil)
 
 	return aView
-}
-
-func MakeEditButton(a *glabsmodel.Assignment, labels ...widget.Label) *widget.Button {
-
-	form := widget.NewForm()
-	//entries := widget.NewFormItem()
-
-	button := widget.NewButton("Edit", func() {
-		for _, v := range labels {
-			item := widget.NewFormItem(v.Text, widget.NewEntry())
-			form.AppendItem(item)
-		}
-
-		newWindow := fyne.CurrentApp().NewWindow("Edit Assignment")
-
-		newWindow.SetContent(form)
-		newWindow.Show()
-	})
-
-	return button
 }

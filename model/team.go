@@ -10,7 +10,7 @@ import (
 )
 
 type Team struct {
-	TeamID int64  `ql:"index xID"`
+	TeamID *int64 `ql:"index xID"`
 	Name   string `ql:"uindex xName, name TeamName"`
 }
 
@@ -36,29 +36,6 @@ func NewTeam(name string) (*Team, string) {
 	return team, ""
 }
 
-func (t *Team) AddStudent(s *Student) {
-	NewStudentTeam(s.MatrikelNr, t.Name)
-}
-
-func (t *Team) RemoveStudent(s *Student) {
-	RemoveStudentFromTeam(s.MatrikelNr, t.Name)
-}
-
-func (t *Team) UpdateTeam(newName string) {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
-
-	if _, _, err := db.Run(DB.NewRWCtx(), `
-			BEGIN TRANSACTION;
-				UPDATE Team	TeamName = $1 WHERE TeamName = $2;
-				UPDATE StudentTeam TeamName = $1 WHERE TeamName = $2;
-				UPDATE TeamAssignment TeamName = $1 WHERE TeamName = $2;
-			COMMIT;
-	`, newName, t.Name); err != nil {
-		panic(err)
-	}
-}
-
 func (t *Team) setTeam() {
 	db := util.GetDB()
 	defer util.FlushAndClose(db)
@@ -82,7 +59,7 @@ func GetTeam(name string) *Team {
 
 	rss, _, e := db.Run(DB.NewRWCtx(), `
 				BEGIN TRANSACTION;
-					SELECT id(), TeamName FROM Team WHERE TeamName = $1;
+					SELECT * FROM Team WHERE TeamName = $1;
 				COMMIT;
 			`, name)
 
@@ -109,6 +86,29 @@ func GetTeam(name string) *Team {
 	return t
 }
 
+func (t *Team) UpdateTeam(newName string) {
+	//check := GetTeam(newName)
+
+	//if check.Name == newName {
+	//	util.WarningLogger.Printf("Team with name %s already exists.\n", newName)
+	//} else {
+
+	UpdateTeamNameForStudents(t.Name, newName)
+	UpdateTeamForAssignments(t.Name, newName)
+
+	db := util.GetDB()
+	defer util.FlushAndClose(db)
+
+	if _, _, err := db.Run(DB.NewRWCtx(), `
+				BEGIN TRANSACTION;
+					UPDATE Team	TeamName = $1 WHERE TeamName = $2;
+				COMMIT;
+		`, newName, t.Name); err != nil {
+		panic(err)
+	}
+	//}
+}
+
 func DeleteTeam(name string) {
 	db := util.GetDB()
 	defer util.FlushAndClose(db)
@@ -124,14 +124,22 @@ func DeleteTeam(name string) {
 	}
 }
 
+func (t Team) JoinAssignment(assignmentPath string) {
+	NewTeamAssignment(t.Name, assignmentPath)
+}
+
+func (t *Team) AddStudent(s *Student) {
+	NewStudentTeam(s.MatrikelNr, t.Name)
+}
+
+func (t *Team) RemoveStudent(s *Student) {
+	RemoveStudentFromTeam(s.MatrikelNr, t.Name)
+}
+
 func (fst *Team) Equals(scd *Team) bool {
 	if scd == nil || fst.Name != scd.Name {
 		return false
 	}
 
 	return true
-}
-
-func (t Team) JoinAssignment(assignmentPath string) {
-	NewTeamAssignment(t.Name, assignmentPath)
 }

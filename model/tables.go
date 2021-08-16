@@ -101,17 +101,26 @@ func InitData() {
 	seSem2 := NewSemester(se.Path, "semester/rs-21ss")
 	algoDatSem1 := NewSemester(algoDat.Path, "semester/ob-19ws")
 
+	// Dummy starter codes
+	starter1, _ := NewStarterCode("git@gitlab.lrz.de:algodat/startercode/startercodeA1.git", "ws20.1", true)
+	starter2, _ := NewStarterCode("git@gitlab.lrz.de:vss/startercode/startercodeA2.git", "ws20.2", true)
+	starter3, _ := NewStarterCode("git@gitlab.lrz.de:se1/startercode/startercodeB1.git", "ss18.1", false)
+	starter4, _ := NewStarterCode("git@gitlab.lrz.de:se2/startercode/startercodeB1.git", "ss19.1", false)
+
+	// Dummy clones
+	clone1, _ := NewClone("/Users/obraun/lectures/algodat/labs/gitlab/semester/ob-20ws/blatt1", "develop")
+	clone2, _ := NewClone("/Users/obraun/lectures/vss/labs/gitlab/semester/ob-21ws/blatt1", "develop")
+	clone3, _ := NewClone("/Users/rs/lectures/se1/labs/gitlab/semester/ob-18ss/blatt1", "master")
+	clone4, _ := NewClone("/Users/rs/lectures/se2/labs/gitlab/semester/ob-19ss/blatt1", "master")
+
 	// Dummy assignments
 	vssSem1Blatt1, _ := NewAssignment("vssSem1Blatt1",
 		vssSem1.Path,
 		"group",
 		"Blatt 1, Verteilte Softwaresysteme, WS 20/21",
 		true,
-		"/Users/obraun/lectures/vss/labs/gitlab/semester/ob-20ws/blatt1",
-		"develop",
-		"git@gitlab.lrz.de:vss/startercode/startercodeB1.git",
-		"ws20.1",
-		true,
+		clone1.LocalPath,
+		starter1.StarterUrl,
 	)
 
 	vssSem1Blatt2, _ := NewAssignment("vssSem1Blatt2",
@@ -119,11 +128,8 @@ func InitData() {
 		"group",
 		"Blatt 2, Verteilte Softwaresysteme, WS 20/21",
 		true,
-		"/Users/obraun/lectures/vss/labs/gitlab/semester/ob-20ws/blatt2",
-		"develop",
-		"git@gitlab.lrz.de:vss/startercode/startercodeB2.git",
-		"ws20.2",
-		true,
+		clone2.LocalPath,
+		starter2.StarterUrl,
 	)
 
 	vssSem2Blatt1, _ := NewAssignment("vssSem2Blatt1",
@@ -131,11 +137,8 @@ func InitData() {
 		"group",
 		"Blatt 1, Verteilte Softwaresysteme, SoSe 21",
 		true,
-		"/Users/obraun/lectures/vss/labs/gitlab/semester/ob-21ss/blatt1",
-		"develop",
-		"git@gitlab.lrz.de:vss/startercode/startercodeB1.git",
-		"ss21.1",
-		true,
+		clone3.LocalPath,
+		starter3.StarterUrl,
 	)
 
 	vssSem2Blatt2, _ := NewAssignment("vssSem2Blatt2",
@@ -143,11 +146,8 @@ func InitData() {
 		"group",
 		"Blatt 2, Verteilte Softwaresysteme, SoSe 21",
 		true,
-		"/Users/obraun/lectures/vss/labs/gitlab/semester/ob-21ss/blatt2",
-		"develop",
-		"git@gitlab.lrz.de:vss/startercode/startercodeB2.git",
-		"ss21.2",
-		true,
+		clone4.LocalPath,
+		starter4.StarterUrl,
 	)
 
 	seSem1Blatt1, _ := NewAssignment("seSem1Blatt1",
@@ -155,11 +155,8 @@ func InitData() {
 		"group",
 		"Blatt 1, Softwareentwicklung, WS 20/21",
 		true,
-		"/Users/rschiedermeier/lectures/se/labs/gitlab/semester/rs-20ws/blatt1",
-		"develop",
-		"git@gitlab.lrz.de:se/startercode/startercodeSEB1.git",
-		"ws20.1",
-		true,
+		clone1.LocalPath,
+		starter1.StarterUrl,
 	)
 
 	seSem1Blatt2, _ := NewAssignment("seSem1Blatt2",
@@ -167,11 +164,8 @@ func InitData() {
 		"group",
 		"Blatt 2, Softwareentwicklung, WS 20/21",
 		true,
-		"/Users/rschiedermeier/lectures/se/labs/gitlab/semester/rs-20ws/blatt2",
-		"develop",
-		"git@gitlab.lrz.de:se/startercode/startercodeSEB2.git",
-		"ws20.2",
-		true,
+		clone2.LocalPath,
+		starter2.StarterUrl,
 	)
 
 	seSem2Blatt1, _ := NewAssignment("seSem2Blatt1",
@@ -179,11 +173,8 @@ func InitData() {
 		"group",
 		"Blatt 1, Softwareentwicklung, SoSe 21",
 		true,
-		"/Users/rschiedermeier/lectures/se/labs/gitlab/semester/rs-21ss/blatt1",
-		"develop",
-		"git@gitlab.lrz.de:se/startercode/startercodeSEB1.git",
-		"ss21.1",
-		true,
+		clone3.LocalPath,
+		starter3.StarterUrl,
 	)
 
 	seSem2Blatt2, _ := NewAssignment("seSem2Blatt2",
@@ -191,11 +182,8 @@ func InitData() {
 		"group",
 		"Blatt 2, Verteilte Softwaresysteme, SoSE 21",
 		true,
-		"/Users/rschiedermeier/lectures/se/labs/gitlab/semester/rs-21ss/blatt2",
-		"develop",
-		"git@gitlab.lrz.de:se/startercode/startercodeSEB2.git",
-		"ws20.2",
-		true,
+		clone4.LocalPath,
+		starter4.StarterUrl,
 	)
 
 	algoDatBlatt1, _ := NewAssignment("algodatBlatt1",
@@ -203,11 +191,8 @@ func InitData() {
 		"group",
 		"Blatt 1, Algorithmen und Datenstrukturen, WS 20/21",
 		true,
-		"/Users/obraun/lectures/algodat/labs/gitlab/semester/ob-20ws/blatt1",
-		"develop",
-		"git@gitlab.lrz.de:algodat/startercode/startercodeADB1.git",
-		"ws20.1",
-		true,
+		clone1.LocalPath,
+		starter1.StarterUrl,
 	)
 
 	algoDatBlatt2, _ := NewAssignment("algodatBlatt2",
@@ -215,11 +200,8 @@ func InitData() {
 		"group",
 		"Blatt 2, Algorithmen und Datenstrukturen, WS 20/21",
 		true,
-		"/Users/obraun/lectures/algodat/labs/gitlab/semester/ob-20ws/blatt2",
-		"develop",
-		"git@gitlab.lrz.de:algodat/startercode/startercodeADB2.git",
-		"ws20.2",
-		true,
+		clone4.LocalPath,
+		starter4.StarterUrl,
 	)
 
 	team1, _ := NewTeam("Team1")

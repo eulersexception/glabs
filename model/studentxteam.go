@@ -31,7 +31,7 @@ func NewStudentTeam(matrikelNr int64, teamName string) {
 	}
 }
 
-func GetTeamsForStudent(matrikelNr int64) []*Team {
+func GetTeamsForStudent(matrikelNr int64) []Team {
 	db := util.GetDB()
 
 	rss, _, e := db.Run(DB.NewRWCtx(), `
@@ -44,7 +44,7 @@ func GetTeamsForStudent(matrikelNr int64) []*Team {
 		panic(e)
 	}
 
-	entries := make([]*StudentTeam, 0)
+	entries := make([]StudentTeam, 0)
 
 	for _, rs := range rss {
 		s := &StudentTeam{}
@@ -55,7 +55,7 @@ func GetTeamsForStudent(matrikelNr int64) []*Team {
 				return false, err
 			}
 
-			entries = append(entries, s)
+			entries = append(entries, *s)
 			return true, nil
 		}); er != nil {
 			panic(er)
@@ -64,16 +64,17 @@ func GetTeamsForStudent(matrikelNr int64) []*Team {
 
 	util.FlushAndClose(db)
 
-	teams := make([]*Team, 0)
+	teams := make([]Team, 0)
 
 	for _, v := range entries {
-		teams = append(teams, GetTeam(v.TeamName))
+		team := GetTeam(v.TeamName)
+		teams = append(teams, *team)
 	}
 
 	return teams
 }
 
-func GetStudentsForTeam(team string) []*Student {
+func GetStudentsForTeam(team string) []Student {
 	db := util.GetDB()
 
 	rss, _, e := db.Run(DB.NewRWCtx(), `
@@ -106,13 +107,62 @@ func GetStudentsForTeam(team string) []*Student {
 
 	util.FlushAndClose(db)
 
-	studs := make([]*Student, 0)
+	studs := make([]Student, 0)
 
 	for _, v := range entries {
-		studs = append(studs, GetStudent(v.MatrikelNr))
+		s := GetStudent(v.MatrikelNr)
+		studs = append(studs, *s)
 	}
 
 	return studs
+}
+
+func UpdateTeamNameForStudents(oldTeamName string, newTeamName string) {
+	students := GetStudentsForTeam(oldTeamName)
+	RemoveStudentsForTeam(oldTeamName)
+
+	for _, v := range students {
+		//util.WarningLogger.Printf("oldname = %s, newName= %s\n", oldTeamName, newTeamName)
+		//v.PrintData()
+		NewStudentTeam(v.MatrikelNr, newTeamName)
+	}
+}
+
+func UpdateStudentMatrikel(oldNum int64, newNum int64) {
+	teams := GetTeamsForStudent(oldNum)
+	RemoveTeamsForStudent(oldNum)
+
+	for _, v := range teams {
+		//util.WarningLogger.Printf("oldname = %d, newName= %d\n", oldNum, newNum)
+		//util.WarningLogger.Printf("Team %s", v.Name)
+		NewStudentTeam(newNum, v.Name)
+	}
+}
+
+func RemoveStudentsForTeam(team string) {
+	db := util.GetDB()
+	defer util.FlushAndClose(db)
+
+	if _, _, err := db.Run(DB.NewRWCtx(), `
+		BEGIN TRANSACTION;
+			DELETE FROM StudentTeam WHERE TeamName = $1;
+		COMMIT;
+	`, team); err != nil {
+		panic(err)
+	}
+}
+
+func RemoveTeamsForStudent(matrikelNr int64) {
+	db := util.GetDB()
+	defer util.FlushAndClose(db)
+
+	if _, _, err := db.Run(DB.NewRWCtx(), `
+		BEGIN TRANSACTION;
+			DELETE FROM StudentTeam WHERE MatrikelNr = $1;
+		COMMIT;
+	`, matrikelNr); err != nil {
+		panic(err)
+	}
 }
 
 func RemoveStudentFromTeam(matrikelNr int64, team string) {

@@ -11,8 +11,8 @@ import (
 )
 
 type Student struct {
-	StudentID  int64 `ql:"index xID"`
-	MatrikelNr int64 `ql:"uindex xMatrikelNr"`
+	StudentID  *int64 `ql:"index xID"`
+	MatrikelNr int64  `ql:"uindex xMatrikelNr"`
 	Name       string
 	FirstName  string
 	NickName   string
@@ -25,7 +25,7 @@ func NewStudent(name string, firstName string, nickName string, email string, ma
 		return nil, res
 	}
 
-	if Mail(email) == false {
+	if !util.IsValidMail(email) {
 		res := "\n+++ Enter valid email address.\n"
 		return nil, res
 	}
@@ -48,18 +48,6 @@ func NewStudent(name string, firstName string, nickName string, email string, ma
 	stud.setStudent()
 
 	return stud, ""
-}
-
-func Mail(email string) bool {
-	if util.IsValidMail(email) {
-		return true
-	} else {
-		return false
-	}
-}
-
-func (s *Student) GetMail() string {
-	return s.Email
 }
 
 func (s *Student) setStudent() {
@@ -85,9 +73,7 @@ func GetStudent(matrikelNr int64) *Student {
 
 	rss, _, e := db.Run(DB.NewRWCtx(), `
 			BEGIN TRANSACTION;
-				SELECT id(), MatrikelNr, Name, FirstName, NickName, Email 
-				FROM Student
-				WHERE MatrikelNr = $1;
+				SELECT * FROM Student WHERE MatrikelNr = $1;
 			COMMIT;
 		`, matrikelNr)
 
@@ -115,6 +101,49 @@ func GetStudent(matrikelNr int64) *Student {
 	return s
 }
 
+func (s *Student) UpdateStudent() {
+	db := util.GetDB()
+	// defer util.FlushAndClose(db)
+
+	// util.WarningLogger.Printf("Student before update: Matrikel %d, name = %s, nickname = %s\n", s.MatrikelNr, s.Name, s.NickName)
+
+	if _, _, err := db.Run(DB.NewRWCtx(), `
+			BEGIN TRANSACTION;
+				UPDATE Student
+					Name = $1, FirstName = $2, NickName = $3, Email = $4
+				WHERE MatrikelNr = $5;
+			COMMIT;
+	`, s.Name, s.FirstName, s.NickName, s.Email, s.MatrikelNr); err != nil {
+		panic(err)
+	}
+
+	util.FlushAndClose(db)
+
+	// newS := GetStudent(s.MatrikelNr)
+
+	// util.WarningLogger.Printf("Student after update: Matrikel %d, name = %s, nickname = %s\n", newS.MatrikelNr, newS.Name, newS.NickName)
+
+}
+
+func UpdateMatrikelNummer(oldNum int64, newNum int64) {
+	if oldNum != newNum {
+		UpdateStudentMatrikel(oldNum, newNum)
+		db := util.GetDB()
+		defer util.FlushAndClose(db)
+
+		_, _, err := db.Run(DB.NewRWCtx(), `
+			BEGIN TRANSACTION;
+				UPDATE Student MatrikelNr = $1
+				WHERE MatrikelNr = $2;
+			COMMIT;
+		`, newNum, oldNum)
+
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
 func DeleteStudent(matrikelNr int64) {
 	db := util.GetDB()
 	defer util.FlushAndClose(db)
@@ -129,19 +158,8 @@ func DeleteStudent(matrikelNr int64) {
 	}
 }
 
-func (s *Student) UpdateStudent() {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
-
-	if _, _, err := db.Run(DB.NewRWCtx(), `
-			BEGIN TRANSACTION;
-				UPDATE Student
-					Name = $1, FirstName = $2, NickName = $3, Email = $4
-				WHERE MatrikelNr = $5;
-			COMMIT;
-	`, s.Name, s.FirstName, s.NickName, s.Email, s.MatrikelNr); err != nil {
-		panic(err)
-	}
+func (s Student) JoinTeam(team string) {
+	NewStudentTeam(s.MatrikelNr, team)
 }
 
 func (s *Student) PrintData() {
@@ -154,8 +172,4 @@ func (fst *Student) Equals(scd *Student) bool {
 		return false
 	}
 	return fst.MatrikelNr == scd.MatrikelNr && fst.Email == scd.Email && fst.Name == scd.Name && fst.FirstName == scd.FirstName
-}
-
-func (s Student) JoinTeam(team string) {
-	NewStudentTeam(s.MatrikelNr, team)
 }

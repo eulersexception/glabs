@@ -9,6 +9,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -24,25 +25,14 @@ func CreateHomeView(myApp fyne.App) {
 	menue := container.NewVSplit(menueBar, sepLine)
 
 	right := container.NewVBox(widget.NewLabel("Test"))
-	semesterByCourses := createCourseAccordion(right)
-	mainAccordion := widget.NewAccordion()
-
-	for coursePath, semesterList := range semesterByCourses {
-		semesterItems := container.NewVBox()
-
-		for _, v := range semesterList {
-			semesterItems.Add(v)
-		}
-
-		semesterItems.Show()
-		mainAccordion.Append(widget.NewAccordionItem(coursePath, semesterItems))
-	}
-
+	changeCourseButtons := createAddEditDeleteButtonsForCourses()
+	mainAccordion := createCourseAccordion(right)
 	scrollableAccordion := container.NewVScroll(mainAccordion)
 	themeButtons := createButtonsforDarkLightMode()
-	left := container.NewVSplit(scrollableAccordion, themeButtons)
+	changeCourseButtonsBox := container.NewVBox(changeCourseButtons[0], changeCourseButtons[1], changeCourseButtons[2])
+	buttons := container.NewVBox(changeCourseButtonsBox, themeButtons)
+	left := container.NewVSplit(scrollableAccordion, buttons)
 	left.SetOffset(1)
-
 	split := container.NewHSplit(left, right)
 	split.SetOffset(0.5)
 	content := container.NewBorder(menue, layout.NewSpacer(), split, layout.NewSpacer())
@@ -68,16 +58,53 @@ func createMenueBar() *container.Split {
 	return menueBar
 }
 
-func createCourseAccordion(content *fyne.Container) map[string][]*widget.Button {
+func createCourseAccordion(right *fyne.Container) *widget.Accordion {
+	semesterByCourse := semesterByCourse(right)
+	mainAccordion := widget.NewAccordion()
+
+	for coursePath, semesterList := range semesterByCourse {
+		semesterItems := container.NewVBox()
+
+		for _, v := range semesterList {
+			semesterItems.Add(v)
+		}
+
+		semesterItems.Show()
+		courseTitle, _ := coursePath.Get()
+
+		aItem := widget.NewAccordionItem(courseTitle, semesterItems)
+
+		mainAccordion.Append(aItem)
+	}
+
+	return mainAccordion
+}
+
+func semesterByCourse(content *fyne.Container) map[binding.String][]*widget.Button {
 	courses := model.GetAllCourses()
-	semesterByCourses := make(map[string][]*widget.Button)
+	semesterByCourses := make(map[binding.String][]*widget.Button)
 
 	for _, v := range courses {
 		semesters := createSemesterButtons(v.Path, content)
-		semesterByCourses[v.Path] = semesters
+		path := binding.NewString()
+		path.Set(v.Path)
+		semesterByCourses[path] = semesters
 	}
 
 	return semesterByCourses
+}
+
+func createAddEditDeleteButtonsForCourses() []*widget.Button {
+	add := widget.NewButton("Add", func() {})
+	edit := widget.NewButton("Edit", func() {})
+	delete := widget.NewButton("Delete", func() {})
+
+	buttons := make([]*widget.Button, 0)
+	buttons = append(buttons, add)
+	buttons = append(buttons, edit)
+	buttons = append(buttons, delete)
+
+	return buttons
 }
 
 func createSemesterButtons(coursePath string, content *fyne.Container) []*widget.Button {
@@ -95,6 +122,7 @@ func createSemesterButtons(coursePath string, content *fyne.Container) []*widget
 		b := widget.NewButton(v.Path, func() {
 			content.Objects[0] = vBox
 		})
+
 		semesterButtons = append(semesterButtons, b)
 	}
 
@@ -112,7 +140,7 @@ func createAssignmentList(semesterPath string, content *fyne.Container, right *f
 	assignmentList := container.NewVBox()
 
 	for _, v := range assignments {
-		assignmentDetails := createAssignmentDetailBox(v.AssignmentPath)
+		assignmentDetails := createAssignmentDetailBox2(v.AssignmentPath)
 		b := widget.NewButton(v.AssignmentPath, func() {
 			newRight := container.NewHBox(right, assignmentDetails)
 			content.Objects[0] = newRight
@@ -124,7 +152,6 @@ func createAssignmentList(semesterPath string, content *fyne.Container, right *f
 }
 
 func createButtonsforDarkLightMode() *fyne.Container {
-
 	var lightButton, darkButton *widget.Button
 
 	lightButton = widget.NewButton("Light", func() {
@@ -139,7 +166,7 @@ func createButtonsforDarkLightMode() *fyne.Container {
 		lightButton.Enable()
 	})
 
-	buttonGroup := container.NewHBox(lightButton, darkButton)
+	buttonGroup := container.NewVBox(lightButton, darkButton)
 
 	return buttonGroup
 }
@@ -148,19 +175,30 @@ func createAssignmentDetailBox(assignmentPath string) *fyne.Container {
 	a := model.GetAssignment(assignmentPath)
 
 	aPathLabel := widget.NewLabel("AssignmentPath:")
-	aPathValue := widget.NewLabel(a.AssignmentPath)
+	aPathStr := binding.NewString()
+	aPathStr.Set(a.AssignmentPath)
+
+	aPathValue := widget.NewLabelWithData(aPathStr)
 
 	aSemPathLabel := widget.NewLabel("SemesterPath:")
-	aSemPathValue := widget.NewLabel(a.SemesterPath)
+	aSemPathStr := binding.NewString()
+	aSemPathStr.Set(a.SemesterPath)
+	aSemPathValue := widget.NewLabelWithData(aSemPathStr)
 
 	aPerLabel := widget.NewLabel("Per:")
-	aPerValue := widget.NewLabel(a.Per)
+	aPerStr := binding.NewString()
+	aPerStr.Set(a.Per)
+	aPerValue := widget.NewLabelWithData(aPerStr)
 
 	aDescLabel := widget.NewLabel("Description:")
-	aDescValue := widget.NewLabel(a.Description)
+	aDescStr := binding.NewString()
+	aDescStr.Set(a.Description)
+	aDescValue := widget.NewLabelWithData(aDescStr)
 
 	aContRegLabel := widget.NewLabel("ContainerRegistry:")
-	aContRegValue := widget.NewLabel(strconv.FormatBool(a.ContainerRegistry))
+	aContRegBool := binding.NewBool()
+	aContRegBool.Set(a.ContainerRegistry)
+	aContRegValue := widget.NewLabelWithData(binding.BoolToString(aContRegBool))
 
 	aStarterCodeLabel := widget.NewLabel("StarterCode:")
 	aStarterCodeValue := widget.NewButton(a.StarterUrl, func() {})
@@ -173,23 +211,26 @@ func createAssignmentDetailBox(assignmentPath string) *fyne.Container {
 
 	editButton := widget.NewButton("Edit", func() {
 		// editLabels := container.NewVBox(aPathLabel, aSemPathLabel, aPerLabel, aDescLabel, aContRegLabel, aStarterCodeLabel, aCloneLabel)
-		pathEntry := widget.NewEntry()
+		pathEntry := widget.NewEntryWithData(aPathStr)
 		pathEntry.SetPlaceHolder(aPathValue.Text)
 		editPath := widget.NewFormItem(aPathLabel.Text, pathEntry)
 
-		semPathEntry := widget.NewEntry()
+		semPathEntry := widget.NewEntryWithData(aSemPathStr)
 		semPathEntry.SetPlaceHolder(aSemPathValue.Text)
 		editSemPath := widget.NewFormItem(aSemPathLabel.Text, semPathEntry)
 
-		perEntry := widget.NewEntry()
+		perEntry := widget.NewEntryWithData(aPerStr)
 		perEntry.SetPlaceHolder(aPerValue.Text)
 		editPer := widget.NewFormItem(aPerLabel.Text, perEntry)
 
-		descEntry := widget.NewMultiLineEntry()
+		descEntry := widget.NewEntryWithData(aDescStr)
 		descEntry.SetPlaceHolder(aDescValue.Text)
 		editDesc := widget.NewFormItem(aDescLabel.Text, descEntry)
 
-		contRegRadioButtons := widget.NewRadioGroup([]string{"true", "false"}, func(string) {})
+		contRegRadioButtons := widget.NewRadioGroup([]string{"true", "false"}, func(choice string) {
+			b, _ := strconv.ParseBool(choice)
+			aContRegBool.Set(b)
+		})
 		contRegRadioButtons.SetSelected(aContRegValue.Text)
 		editContReg := widget.NewFormItem(aContRegLabel.Text, contRegRadioButtons)
 
@@ -205,13 +246,19 @@ func createAssignmentDetailBox(assignmentPath string) *fyne.Container {
 		editWindow := fyne.CurrentApp().NewWindow(fmt.Sprintf("Edit %s", aPathValue.Text))
 
 		cancelButton := widget.NewButton("Abbrechen", func() {
-
 			var editModal *widget.PopUp
 			warning := canvas.NewText("Eingabe abbrechen? Erfasste Daten werden nicht gespeichert", theme.TextColor())
 			no := widget.NewButton("Nein", func() {
 				editModal.Hide()
 			})
 			yes := widget.NewButton("Ja", func() {
+				// TODO: Add cancel logic to reset fields
+				aPathStr.Set(a.AssignmentPath)
+				aSemPathStr.Set(a.SemesterPath)
+				aPerStr.Set(a.Per)
+				aDescStr.Set(a.Description)
+				aContRegBool.Set(a.ContainerRegistry)
+
 				editWindow.Close()
 			})
 
@@ -228,6 +275,39 @@ func createAssignmentDetailBox(assignmentPath string) *fyne.Container {
 				editModal.Hide()
 			})
 			yes := widget.NewButton("Ja", func() {
+				newPath := pathEntry.Text
+				newSemPath := semPathEntry.Text
+				newPer := perEntry.Text
+				newDesc := descEntry.Text
+				newContReg, _ := strconv.ParseBool(contRegRadioButtons.Selected)
+				// TODO: implement value extraction logic for starter code and clone
+
+				aPathStr.Set(newPath)
+				aSemPathStr.Set(newSemPath)
+				aPerStr.Set(newPer)
+				aDescStr.Set(newDesc)
+				aContRegBool.Set(newContReg)
+
+				if newPath != a.AssignmentPath {
+					model.UpdateAssignmentPath(a.AssignmentPath, newPath)
+				}
+
+				newAssignment := &model.Assignment{
+					AssignmentPath:    newPath,
+					SemesterPath:      newSemPath,
+					Per:               newPer,
+					Description:       newDesc,
+					ContainerRegistry: newContReg,
+					StarterUrl:        aStarterCodeValue.Text,
+					LocalPath:         aCloneValue.Text,
+				}
+
+				newAssignment.UpdateAssignment()
+
+				for _, v := range fyne.CurrentApp().Driver().AllWindows() {
+					v.Content().Refresh()
+				}
+
 				editWindow.Close()
 			})
 
@@ -245,7 +325,22 @@ func createAssignmentDetailBox(assignmentPath string) *fyne.Container {
 		editWindow.Show()
 	})
 
-	editLabelsValues := container.NewHBox(labels, values)
+	labelsValues := container.NewHBox(labels, values)
 
-	return container.NewBorder(editLabelsValues, editButton, nil, nil)
+	teamsButton := widget.NewButton("Teams", func() {
+		w := CreateNewTeamView(a)
+		w.Show()
+	})
+
+	buttons := container.NewVBox(editButton, teamsButton)
+
+	return container.NewBorder(labelsValues, buttons, nil, nil)
+}
+
+func createAssignmentDetailBox2(assignmentPath string) *fyne.Container {
+	a := model.GetAssignment(assignmentPath)
+	view := NewAssignmentView(a)
+
+	return view.Content
+
 }

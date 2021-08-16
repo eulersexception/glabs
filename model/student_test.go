@@ -3,6 +3,7 @@ package model
 import (
 	"testing"
 
+	"github.com/eulersexception/glabs-ui/util"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -19,7 +20,7 @@ func init() {
 }
 
 func TestMailValid(t *testing.T) {
-	got := Mail("valid@mail.com")
+	got := util.IsValidMail("valid@mail.com")
 
 	if !got {
 		t.Errorf("want = true, got = false\n")
@@ -27,7 +28,7 @@ func TestMailValid(t *testing.T) {
 }
 
 func TestMailInvalid(t *testing.T) {
-	got := Mail("in valid@mail#com")
+	got := util.IsValidMail("in valid@mail#com")
 
 	if got {
 		t.Error("want = false, got = true\n")

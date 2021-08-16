@@ -10,14 +10,14 @@ func init() {
 	CreateTables()
 }
 
-var starter = &StarterCode{
-	Url:             "git@gitlab.lrz.de:vss/startercode/startercodeB1.git",
+var localStarter = &StarterCode{
+	StarterUrl:      "git@gitlab.lrz.de:vss/startercode/startercodeC1.git",
 	FromBranch:      "ws20.1",
 	ProtectToBranch: true,
 }
 
-var clone = &Clone{
-	LocalPath: "/Users/obraun/lectures/vss/labs/gitlab/semester/ob-20ws/blatt1",
+var localClone = &Clone{
+	LocalPath: "/Users/obraun/lectures/vss/labs/gitlab/semester/ob-20ws/blatt10",
 	Branch:    "develop",
 }
 
@@ -27,21 +27,22 @@ var assignment = &Assignment{
 	Per:               "group",
 	Description:       "Blatt 1, Verteilte Softwaresysteme, WS 20/21",
 	ContainerRegistry: true,
-	LocalPath:         clone.LocalPath,
-	StarterUrl:        starter.Url,
+	LocalPath:         localClone.LocalPath,
+	StarterUrl:        localStarter.StarterUrl,
 }
 
 func TestNewAssignmentSuccess(t *testing.T) {
 	want, _ := NewAssignment(assignment.AssignmentPath, assignment.SemesterPath,
 		assignment.Per, assignment.Description, assignment.ContainerRegistry,
-		assignment.LocalPath, clone.Branch, assignment.StarterUrl, starter.FromBranch,
-		starter.ProtectToBranch)
+		assignment.LocalPath, assignment.StarterUrl)
 
 	got := GetAssignment(want.AssignmentPath)
 
 	if !cmp.Equal(want, got) {
 		t.Errorf("want = '%v', got = '%v'\n", want, got)
 	}
+
+	DeleteAssignment(want.AssignmentPath)
 }
 
 func TestNewAssignmentFailMissingAssignmentPath(t *testing.T) {
@@ -49,8 +50,7 @@ func TestNewAssignmentFailMissingAssignmentPath(t *testing.T) {
 
 	got, gotString := NewAssignment("", assignment.SemesterPath,
 		assignment.Per, assignment.Description, assignment.ContainerRegistry,
-		assignment.LocalPath, clone.Branch, assignment.StarterUrl, starter.FromBranch,
-		starter.ProtectToBranch)
+		assignment.LocalPath, assignment.StarterUrl)
 
 	if got != nil {
 		t.Errorf("want = <nil>, got = '%v'", got)
@@ -66,8 +66,7 @@ func TestNewAssignmentFailMissingSemesterPath(t *testing.T) {
 
 	got, gotString := NewAssignment(assignment.AssignmentPath, "",
 		assignment.Per, assignment.Description, assignment.ContainerRegistry,
-		assignment.LocalPath, clone.Branch, assignment.StarterUrl, starter.FromBranch,
-		starter.ProtectToBranch)
+		assignment.LocalPath, assignment.StarterUrl)
 
 	if got != nil {
 		t.Errorf("want = <nil>, got = '%v'", got)
@@ -83,8 +82,7 @@ func TestNewAssignmentFailMissingPer(t *testing.T) {
 
 	got, gotString := NewAssignment(assignment.AssignmentPath, assignment.SemesterPath,
 		"", assignment.Description, assignment.ContainerRegistry,
-		assignment.LocalPath, clone.Branch, assignment.StarterUrl, starter.FromBranch,
-		starter.ProtectToBranch)
+		assignment.LocalPath, assignment.StarterUrl)
 
 	if got != nil {
 		t.Errorf("want = <nil>, got = '%v'", got)
@@ -100,76 +98,7 @@ func TestNewAssignmentFailMissingDescription(t *testing.T) {
 
 	got, gotString := NewAssignment(assignment.AssignmentPath, assignment.SemesterPath,
 		assignment.Per, "", assignment.ContainerRegistry,
-		assignment.LocalPath, clone.Branch, assignment.StarterUrl, starter.FromBranch,
-		starter.ProtectToBranch)
-
-	if got != nil {
-		t.Errorf("want = <nil>, got = '%v'", got)
-	}
-
-	if wantStr != gotString {
-		t.Errorf("want = <nil>, got = <nil>\nwant message = '%s'\ngot message = '%s'", wantStr, gotString)
-	}
-}
-
-func TestNewAssignmentFailMissingLocalPath(t *testing.T) {
-	wantStr := "Enter valid local path."
-
-	got, gotString := NewAssignment(assignment.AssignmentPath, assignment.SemesterPath,
-		assignment.Per, assignment.Description, assignment.ContainerRegistry,
-		"", clone.Branch, assignment.StarterUrl, starter.FromBranch,
-		starter.ProtectToBranch)
-
-	if got != nil {
-		t.Errorf("want = <nil>, got = '%v'", got)
-	}
-
-	if wantStr != gotString {
-		t.Errorf("want = <nil>, got = <nil>\nwant message = '%s'\ngot message = '%s'", wantStr, gotString)
-	}
-}
-
-func TestNewAssignmentFailMissingBranch(t *testing.T) {
-	wantStr := "Enter valid branch."
-
-	got, gotString := NewAssignment(assignment.AssignmentPath, assignment.SemesterPath,
-		assignment.Per, assignment.Description, assignment.ContainerRegistry,
-		assignment.LocalPath, "", assignment.StarterUrl, starter.FromBranch,
-		starter.ProtectToBranch)
-
-	if got != nil {
-		t.Errorf("want = <nil>, got = '%v'", got)
-	}
-
-	if wantStr != gotString {
-		t.Errorf("want = <nil>, got = <nil>\nwant message = '%s'\ngot message = '%s'", wantStr, gotString)
-	}
-}
-
-func TestNewAssignmentFailMissingStarterUrl(t *testing.T) {
-	wantStr := "Enter valid starter url."
-
-	got, gotString := NewAssignment(assignment.AssignmentPath, assignment.SemesterPath,
-		assignment.Per, assignment.Description, assignment.ContainerRegistry,
-		assignment.LocalPath, clone.Branch, "", starter.FromBranch,
-		starter.ProtectToBranch)
-
-	if got != nil {
-		t.Errorf("want = <nil>, got = '%v'", got)
-	}
-
-	if wantStr != gotString {
-		t.Errorf("want = <nil>, got = <nil>\nwant message = '%s'\ngot message = '%s'", wantStr, gotString)
-	}
-}
-
-func TestNewAssignmentFailMissingFromBranch(t *testing.T) {
-	wantStr := "Enter valid from branch."
-
-	got, gotString := NewAssignment(assignment.AssignmentPath, assignment.SemesterPath,
-		assignment.Per, assignment.Description, assignment.ContainerRegistry,
-		assignment.LocalPath, clone.Branch, assignment.StarterUrl, "",
-		starter.ProtectToBranch)
+		assignment.LocalPath, assignment.StarterUrl)
 
 	if got != nil {
 		t.Errorf("want = <nil>, got = '%v'", got)
@@ -188,14 +117,13 @@ func TestDeleteAssignment(t *testing.T) {
 		Description:       "Blatt X, Verteilte Softwaresysteme, WS 2X/2X",
 		ContainerRegistry: true,
 		LocalPath:         clone.LocalPath,
-		StarterUrl:        starter.Url,
+		StarterUrl:        starter.StarterUrl,
 	}
 
 	NewAssignment(as.AssignmentPath, as.SemesterPath,
 		as.Per, as.Description,
 		as.ContainerRegistry, as.LocalPath,
-		clone.Branch, as.StarterUrl,
-		starter.FromBranch, starter.ProtectToBranch)
+		as.StarterUrl)
 
 	DeleteAssignment(as.AssignmentPath)
 
@@ -215,14 +143,13 @@ func TestUpdateAssignment(t *testing.T) {
 		Description:       "Blatt X, Verteilte Softwaresysteme, WS 2X/2X",
 		ContainerRegistry: true,
 		LocalPath:         clone.LocalPath,
-		StarterUrl:        starter.Url,
+		StarterUrl:        starter.StarterUrl,
 	}
 
 	NewAssignment(as.AssignmentPath, as.SemesterPath,
 		as.Per, as.Description,
 		as.ContainerRegistry, as.LocalPath,
-		clone.Branch, as.StarterUrl,
-		starter.FromBranch, starter.ProtectToBranch)
+		as.StarterUrl)
 
 	as.SemesterPath = "semester/ob-22ws"
 	as.Per = "single"
@@ -238,150 +165,5 @@ func TestUpdateAssignment(t *testing.T) {
 		t.Errorf("want = '%v', got = '%v'", want, got)
 	}
 
-	DeleteAssignment(as.AssignmentPath)
-}
-
-func TestGetStarterCode(t *testing.T) {
-	DeleteStarterCode(starter.Url)
-	DeleteClone(clone.LocalPath)
-
-	as := &Assignment{
-		AssignmentPath:    "blattX",
-		SemesterPath:      "semester/ob-2Xws",
-		Per:               "group",
-		Description:       "Blatt X, Verteilte Softwaresysteme, WS 2X/2X",
-		ContainerRegistry: true,
-		LocalPath:         clone.LocalPath,
-		StarterUrl:        starter.Url,
-	}
-
-	NewAssignment(as.AssignmentPath, as.SemesterPath,
-		as.Per, as.Description,
-		as.ContainerRegistry, as.LocalPath,
-		clone.Branch, as.StarterUrl,
-		starter.FromBranch, starter.ProtectToBranch)
-
-	want := starter
-	got := GetStarterCode(as.StarterUrl)
-
-	if !cmp.Equal(want, got) {
-		t.Errorf("want = '%v', got = '%v'", want, got)
-	}
-
-	DeleteAssignment(as.AssignmentPath)
-}
-
-func TestUpdateStarterCode(t *testing.T) {
-	want := starter
-	want.FromBranch = "github-dummy.com/starter"
-	want.ProtectToBranch = false
-
-	want.UpdateStarterCode()
-	got := GetStarterCode(want.Url)
-
-	if !cmp.Equal(want, got) {
-		t.Errorf("want = '%v', got = '%v'", want, got)
-	}
-
-	DeleteStarterCode(want.Url)
-}
-
-func TestDeleteStarterCode(t *testing.T) {
-	as := &Assignment{
-		AssignmentPath:    "blattY",
-		SemesterPath:      "semester/ob-2Yws",
-		Per:               "group",
-		Description:       "Blatt Y, Verteilte Softwaresysteme, WS 2Y/2Y",
-		ContainerRegistry: true,
-		LocalPath:         clone.LocalPath,
-		StarterUrl:        starter.Url,
-	}
-
-	NewAssignment(as.AssignmentPath, as.SemesterPath,
-		as.Per, as.Description,
-		as.ContainerRegistry, as.LocalPath,
-		clone.Branch, as.StarterUrl,
-		starter.FromBranch, starter.ProtectToBranch)
-
-	DeleteStarterCode(as.StarterUrl)
-
-	want := &StarterCode{}
-	got := GetStarterCode(as.StarterUrl)
-
-	if !cmp.Equal(want, got) {
-		t.Errorf("want = '%v', got = '%v'", want, got)
-	}
-
-	DeleteAssignment(as.AssignmentPath)
-}
-
-func TestGetClone(t *testing.T) {
-	as := &Assignment{
-		AssignmentPath:    "blattX",
-		SemesterPath:      "semester/ob-2Xws",
-		Per:               "group",
-		Description:       "Blatt X, Verteilte Softwaresysteme, WS 2X/2X",
-		ContainerRegistry: true,
-		LocalPath:         clone.LocalPath,
-		StarterUrl:        starter.Url,
-	}
-
-	NewAssignment(as.AssignmentPath, as.SemesterPath,
-		as.Per, as.Description,
-		as.ContainerRegistry, as.LocalPath,
-		clone.Branch, as.StarterUrl,
-		starter.FromBranch, starter.ProtectToBranch)
-
-	want := clone
-	got := GetClone(as.LocalPath)
-
-	if !cmp.Equal(want, got) {
-		t.Errorf("want = '%v', got = '%v'", want, got)
-	}
-
-	DeleteAssignment(as.AssignmentPath)
-}
-
-func TestUpdateClone(t *testing.T) {
-	want := clone
-	want.Branch = "master"
-
-	want.UpdateClone()
-	got := GetClone(want.LocalPath)
-
-	if !cmp.Equal(want, got) {
-		t.Errorf("want = '%v', got = '%v'", want, got)
-	}
-
-	DeleteClone(want.LocalPath)
-}
-
-func TestDeleteClone(t *testing.T) {
-	as := &Assignment{
-		AssignmentPath:    "blattY",
-		SemesterPath:      "semester/ob-2Yws",
-		Per:               "group",
-		Description:       "Blatt Y, Verteilte Softwaresysteme, WS 2Y/2Y",
-		ContainerRegistry: true,
-		LocalPath:         clone.LocalPath,
-		StarterUrl:        starter.Url,
-	}
-
-	NewAssignment(as.AssignmentPath, as.SemesterPath,
-		as.Per, as.Description,
-		as.ContainerRegistry, as.LocalPath,
-		clone.Branch, as.StarterUrl,
-		starter.FromBranch, starter.ProtectToBranch)
-
-	DeleteClone(as.LocalPath)
-
-	want := &Clone{}
-	got := GetClone(as.LocalPath)
-
-	if !cmp.Equal(want, got) {
-		t.Errorf("want = '%v', got = '%v'", want, got)
-	}
-
-	DeleteClone(as.LocalPath)
 	DeleteAssignment(as.AssignmentPath)
 }
