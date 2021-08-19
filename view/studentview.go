@@ -19,39 +19,7 @@ type StudentView struct {
 	Student *glabsmodel.Student
 }
 
-// func NewStudentView(s *glabsmodel.Student) *StudentView {
-// 	title := widget.NewLabel("Student Info")
-
-// 	matrikelLabel := widget.NewLabel("Matrikelnummer:")
-// 	matrikelNummer := widget.NewLabel(fmt.Sprintf("%v", s.MatrikelNr))
-
-// 	nameLabel := widget.NewLabel("Name:")
-// 	name := widget.NewLabel(s.Name)
-
-// 	firstNameLabel := widget.NewLabel("Vorname:")
-// 	firstName := widget.NewLabel(s.FirstName)
-
-// 	nickNameLabel := widget.NewLabel("Nickname:")
-// 	nickName := widget.NewLabel(s.NickName)
-
-// 	emailLabel := widget.NewLabel("Email:")
-// 	email := widget.NewLabel(s.Email)
-
-// 	labels := container.NewVBox(matrikelLabel, nameLabel, firstNameLabel, nickNameLabel, emailLabel)
-// 	values := container.NewVBox(matrikelNummer, name, firstName, nickName, email)
-
-// 	data := container.NewHBox(labels, values)
-// 	content := container.NewVBox(title, data)
-
-// 	studView := &StudentView{
-// 		Content: content,
-// 		Student: s,
-// 	}
-
-// 	return studView
-// }
-
-func CreateNewStudentView(team *model.Team) fyne.Window {
+func NewStudentView(team *model.Team) fyne.Window {
 	studentWindow := fyne.CurrentApp().NewWindow(fmt.Sprintf("Students in Team %s", team.Name))
 	students := model.GetStudentsForTeam(team.Name)
 	sort.Slice(students, func(i int, j int) bool { return students[i].MatrikelNr < students[j].MatrikelNr })
@@ -134,7 +102,7 @@ func CreateNewStudentView(team *model.Team) fyne.Window {
 				model.UpdateMatrikelNummer(stud.MatrikelNr, newMatrikelNr)
 			}
 
-			newStudentWindowContent := CreateNewStudentView(team).Content()
+			newStudentWindowContent := NewStudentView(team).Content()
 			studentWindow.SetContent(newStudentWindowContent)
 			studentWindow.Content().Refresh()
 		})
@@ -149,7 +117,7 @@ func CreateNewStudentView(team *model.Team) fyne.Window {
 
 		delete := widget.NewButton("Delete", func() {
 			model.DeleteStudent(stud.MatrikelNr)
-			newStudentWindow := CreateNewStudentView(team)
+			newStudentWindow := NewStudentView(team)
 			newStudentWindow.Show()
 			studentWindow.Close()
 		})

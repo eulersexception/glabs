@@ -21,13 +21,8 @@ type AssignmentView struct {
 	Assignment *glabsmodel.Assignment
 }
 
-func NewAssignmentView(assignment *glabsmodel.Assignment) *AssignmentView {
-
-	aView := &AssignmentView{
-		Assignment: assignment,
-	}
-
-	a := model.GetAssignment(assignment.AssignmentPath)
+func NewAssignmentView(path string) *AssignmentView {
+	a := model.GetAssignment(path)
 
 	aPathLabel := widget.NewLabel("AssignmentPath:")
 	aPathStr := binding.NewString()
@@ -183,12 +178,13 @@ func NewAssignmentView(assignment *glabsmodel.Assignment) *AssignmentView {
 	labelsValues := container.NewHBox(labels, values)
 
 	teamsButton := widget.NewButton("Teams", func() {
-		w := CreateNewTeamView(a)
+		w := NewTeamView(a)
 		w.Show()
 	})
 
 	buttons := container.NewVBox(editButton, teamsButton)
 
+	aView := &AssignmentView{}
 	aView.Content = container.NewBorder(labelsValues, buttons, nil, nil)
 
 	return aView
