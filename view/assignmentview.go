@@ -2,6 +2,7 @@ package view
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 
 	"github.com/eulersexception/glabs-ui/model"
@@ -50,14 +51,8 @@ func NewAssignmentView(path string) *AssignmentView {
 	aContRegBool.Set(a.ContainerRegistry)
 	aContRegValue := widget.NewLabelWithData(binding.BoolToString(aContRegBool))
 
-	aStarterCodeLabel := widget.NewLabel("StarterCode:")
-	aStarterCodeValue := widget.NewButton(a.StarterUrl, func() {})
-
-	aCloneLabel := widget.NewLabel("Clone:")
-	aCloneValue := widget.NewButton(a.LocalPath, func() {})
-
-	labels := container.NewVBox(aPathLabel, aSemPathLabel, aPerLabel, aDescLabel, aContRegLabel, aStarterCodeLabel, aCloneLabel)
-	values := container.NewVBox(aPathValue, aSemPathValue, aPerValue, aDescValue, aContRegValue, aStarterCodeValue, aCloneValue)
+	labels := container.NewVBox(aPathLabel, aSemPathLabel, aPerLabel, aDescLabel, aContRegLabel)
+	values := container.NewVBox(aPathValue, aSemPathValue, aPerValue, aDescValue, aContRegValue)
 
 	editButton := widget.NewButton("Edit", func() {
 		// editLabels := container.NewVBox(aPathLabel, aSemPathLabel, aPerLabel, aDescLabel, aContRegLabel, aStarterCodeLabel, aCloneLabel)
@@ -84,15 +79,7 @@ func NewAssignmentView(path string) *AssignmentView {
 		contRegRadioButtons.SetSelected(aContRegValue.Text)
 		editContReg := widget.NewFormItem(aContRegLabel.Text, contRegRadioButtons)
 
-		starterEntry := widget.NewEntry()
-		starterEntry.SetPlaceHolder(aStarterCodeValue.Text)
-		editStarterCode := widget.NewFormItem(aStarterCodeLabel.Text, starterEntry)
-
-		cloneEntry := widget.NewEntry()
-		cloneEntry.SetPlaceHolder(aContRegValue.Text)
-		editClone := widget.NewFormItem(aCloneLabel.Text, cloneEntry)
-
-		editForm := widget.NewForm(editPath, editSemPath, editPer, editDesc, editContReg, editStarterCode, editClone)
+		editForm := widget.NewForm(editPath, editSemPath, editPer, editDesc, editContReg)
 		editWindow := fyne.CurrentApp().NewWindow(fmt.Sprintf("Edit %s", aPathValue.Text))
 
 		cancelButton := widget.NewButton("Abbrechen", func() {
@@ -142,17 +129,13 @@ func NewAssignmentView(path string) *AssignmentView {
 					model.UpdateAssignmentPath(a.AssignmentPath, newPath)
 				}
 
-				newAssignment := &model.Assignment{
-					AssignmentPath:    newPath,
-					SemesterPath:      newSemPath,
-					Per:               newPer,
-					Description:       newDesc,
-					ContainerRegistry: newContReg,
-					StarterUrl:        aStarterCodeValue.Text,
-					LocalPath:         aCloneValue.Text,
-				}
+				a.AssignmentPath = newPath
+				a.SemesterPath = newSemPath
+				a.Per = newPer
+				a.Description = newDesc
+				a.ContainerRegistry = newContReg
 
-				newAssignment.UpdateAssignment()
+				a.UpdateAssignment()
 
 				for _, v := range fyne.CurrentApp().Driver().AllWindows() {
 					v.Content().Refresh()
@@ -175,17 +158,51 @@ func NewAssignmentView(path string) *AssignmentView {
 		editWindow.Show()
 	})
 
-	labelsValues := container.NewHBox(labels, values)
+	// aStarterCodeLabel := widget.NewLabel("StarterCode:")
+	aStarterButton := widget.NewButton("Starter Code", func() {
+		starterWindow := fyne.CurrentApp().NewWindow((fmt.Sprintf("Starter Code for %s", a.StarterUrl)))
+		starterWindow.SetContent(NewStarterCodeView(a.StarterUrl))
+		starterWindow.Show()
+	})
+
+	// aCloneLabel := widget.NewLabel("Clone:")
+	aCloneButton := widget.NewButton("Clone", func() {
+		cloneWindow := fyne.CurrentApp().NewWindow(fmt.Sprintf("Clone for %s", a.LocalPath))
+		cloneWindow.SetContent(NewCloneView(a.LocalPath))
+		cloneWindow.Show()
+	})
 
 	teamsButton := widget.NewButton("Teams", func() {
 		w := NewTeamView(a)
 		w.Show()
 	})
 
-	buttons := container.NewVBox(editButton, teamsButton)
-
+	labelsValues := container.NewHBox(labels, values)
+	buttons := container.NewVBox(editButton, aStarterButton, aCloneButton, teamsButton)
 	aView := &AssignmentView{}
 	aView.Content = container.NewBorder(labelsValues, buttons, nil, nil)
 
 	return aView
+}
+
+func createAssignmentList(semesterPath string, content *fyne.Container, right *fyne.Container) *fyne.Container {
+	assignments := model.GetAllAssignmentsForSemester(semesterPath)
+	sort.Slice(assignments, func(i int, j int) bool {
+		return assignments[i].AssignmentPath < assignments[j].AssignmentPath
+	})
+
+	assignmentList := container.NewVBox()
+
+	for _, v := range assignments {
+		a := v
+		view := NewAssignmentView(a.AssignmentPath)
+		assignmentDetails := view.Content
+		b := widget.NewButton(a.AssignmentPath, func() {
+			newRight := container.NewHBox(right, assignmentDetails)
+			content.Objects[0] = newRight
+		})
+		assignmentList.Add(b)
+	}
+
+	return assignmentList
 }

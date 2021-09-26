@@ -180,6 +180,7 @@ func UpdateAssignmentForTeams(oldPath string, newPath string) {
 	RemoveTeamsForAssignment(oldPath)
 
 	for _, v := range teams {
+		util.InfoLogger.Printf("Creating new TeamAssignment for team = %s and assignment = %s\n", v.Name, newPath)
 		NewTeamAssignment(v.Name, newPath)
 	}
 }

@@ -10,36 +10,20 @@ import (
 
 func NewCloneView(localPath string) *fyne.Container {
 	cloneContainer := container.NewVBox()
-	var clone *widget.Button
 
-	clone = widget.NewButton(localPath, func() {
-		innerClone := glabsmodel.GetClone(localPath)
+	clone := glabsmodel.GetClone(localPath)
 
-		pathLabel := widget.NewLabel("Local Path:")
-		path := widget.NewLabel(innerClone.LocalPath)
+	pathLabel := widget.NewLabel("Local Path:")
+	path := widget.NewLabel(clone.LocalPath)
 
-		branchLabel := widget.NewLabel("Branch:")
-		branch := widget.NewLabel(innerClone.Branch)
+	branchLabel := widget.NewLabel("Branch:")
+	branch := widget.NewLabel(clone.Branch)
 
-		cloneLabels := container.NewVBox(pathLabel, branchLabel)
-		cloneValues := container.NewVBox(path, branch)
+	cloneLabels := container.NewVBox(pathLabel, branchLabel)
+	cloneValues := container.NewVBox(path, branch)
 
-		cloneData := container.NewHBox(cloneLabels, cloneValues)
-		cloneContainer.Add(cloneData)
-
-		var hide *widget.Button
-
-		hide = widget.NewButton("Hide", func() {
-			cloneData.Hide()
-			hide.Hide()
-			clone.Show()
-		})
-
-		cloneContainer.Add(hide)
-		clone.Hide()
-	})
-
-	cloneContainer.Add(clone)
+	cloneData := container.NewHBox(cloneLabels, cloneValues)
+	cloneContainer.Add(cloneData)
 
 	return cloneContainer
 }
