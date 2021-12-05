@@ -3,41 +3,162 @@ package model
 import (
 	"fmt"
 
-	util "github.com/eulersexception/glabs-ui/util"
+	"github.com/google/go-cmp/cmp"
+
+	DB "modernc.org/ql"
 )
 
 type Student struct {
-	Id        int
-	Name      string
-	FirstName string
-	NickName  string
-	email     string
+	StudentID  *int64 `ql:"index xID"`
+	MatrikelNr int64  `ql:"uindex xMatrikelNr"`
+	Name       string
+	FirstName  string
+	NickName   string
+	Email      string
 }
 
-func NewStudent(id int, name string, firstName string) *Student {
+func NewStudent(name string, firstName string, nickName string, email string, matrikelNr int64) (*Student, string) {
 	if name == "" || firstName == "" {
-		fmt.Println("Please provide valid name or first name.")
-		return nil
+		res := "\n+++ Enter valid name or first name.\n"
+		return nil, res
 	}
 
-	student := &Student{
-		Id:        id,
-		Name:      name,
-		FirstName: firstName,
+	if !IsValidMail(email) {
+		res := "\n+++ Enter valid email address.\n"
+		return nil, res
 	}
 
-	return student
+	existing := GetStudent(matrikelNr)
+	empty := &Student{}
+
+	if !cmp.Equal(existing, empty) {
+		return existing, "Student already exists - use update for changes"
+	}
+
+	stud := &Student{
+		MatrikelNr: matrikelNr,
+		NickName:   nickName,
+		Email:      email,
+		Name:       name,
+		FirstName:  firstName,
+	}
+
+	stud.setStudent()
+
+	return stud, ""
 }
 
-func (s *Student) Mail(email string) bool {
-	if util.IsValidMail(email) {
-		s.email = email
-		return true
-	} else {
+func (s *Student) setStudent() {
+	db := GetDB()
+
+	_, _, err := db.Run(DB.NewRWCtx(), `
+		BEGIN TRANSACTION;
+			INSERT INTO Student IF NOT EXISTS (MatrikelNr, Name, FirstName, NickName, Email) 
+			VALUES ($1, $2, $3, $4, $5);
+		COMMIT;
+		`, s.MatrikelNr, s.Name, s.FirstName, s.NickName, s.Email)
+
+	if err != nil {
+		panic(err)
+	}
+
+	FlushAndClose(db)
+}
+
+func GetStudent(matrikelNr int64) *Student {
+	db := GetDB()
+	defer FlushAndClose(db)
+
+	rss, _, e := db.Run(DB.NewRWCtx(), `
+			BEGIN TRANSACTION;
+				SELECT * FROM Student WHERE MatrikelNr = $1;
+			COMMIT;
+		`, matrikelNr)
+
+	if e != nil {
+		panic(e)
+	}
+
+	s := &Student{}
+
+	for _, rs := range rss {
+		if er := rs.Do(false, func(data []interface{}) (bool, error) {
+			if err := DB.Unmarshal(s, data); err != nil {
+				return false, err
+			}
+
+			return true, nil
+
+		}); er != nil {
+			panic(er)
+		}
+	}
+
+	return s
+}
+
+func (s *Student) UpdateStudent() {
+	db := GetDB()
+
+	if _, _, err := db.Run(DB.NewRWCtx(), `
+			BEGIN TRANSACTION;
+				UPDATE Student
+					Name = $1, FirstName = $2, NickName = $3, Email = $4
+				WHERE MatrikelNr = $5;
+			COMMIT;
+	`, s.Name, s.FirstName, s.NickName, s.Email, s.MatrikelNr); err != nil {
+		panic(err)
+	}
+
+	FlushAndClose(db)
+}
+
+func UpdateMatrikelNummer(oldNum int64, newNum int64) {
+	if oldNum != newNum {
+		UpdateStudentMatrikel(oldNum, newNum)
+		db := GetDB()
+		defer FlushAndClose(db)
+
+		_, _, err := db.Run(DB.NewRWCtx(), `
+			BEGIN TRANSACTION;
+				UPDATE Student MatrikelNr = $1
+				WHERE MatrikelNr = $2;
+			COMMIT;
+		`, newNum, oldNum)
+
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
+func DeleteStudent(matrikelNr int64) {
+	db := GetDB()
+	defer FlushAndClose(db)
+
+	if _, _, err := db.Run(DB.NewRWCtx(), `
+		BEGIN TRANSACTION;
+			DELETE FROM Student WHERE MatrikelNr = $1;
+			DELETE FROM StudentTeam WHERE MatrikelNr = $1;
+		COMMIT;
+	`, matrikelNr); err != nil {
+		panic(err)
+	}
+}
+
+func (s Student) JoinTeam(team string) {
+	NewStudentTeam(s.MatrikelNr, team)
+}
+
+func (s *Student) PrintData() {
+	fmt.Printf("\n-------------------\nName:\t\t%s %s\nNick:\t\t%s\nMailTo:\t\t%s\nId:\t\t%d\n",
+		s.FirstName, s.Name, s.NickName, s.Email, s.MatrikelNr)
+}
+
+func (fst *Student) Equals(scd *Student) bool {
+	if scd == nil {
 		return false
 	}
-}
 
-func (s Student) GetMail() string {
-	return s.email
+	return fst.MatrikelNr == scd.MatrikelNr && fst.Email == scd.Email && fst.Name == scd.Name && fst.FirstName == scd.FirstName
 }

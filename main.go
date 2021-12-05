@@ -1,11 +1,18 @@
 package main
 
 import (
-	glabsView "github.com/eulersexception/glabs-ui/view"
+	"fyne.io/fyne/v2/app"
+	"github.com/eulersexception/glabs-ui/model"
+	"github.com/eulersexception/glabs-ui/view"
+
+	util "github.com/eulersexception/glabs-ui/util"
 )
 
 func main() {
-
-	glabsView.NewHomeview().Window.ShowAndRun()
-
+	util.InitLoggers()
+	model.CreateTables()
+	model.InitData()
+	myApp := app.New()
+	view.CreateHomeView(myApp)
+	model.DropTables()
 }
