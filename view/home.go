@@ -1,134 +1,66 @@
 package view
 
 import (
-	"fmt"
+	"image/color"
 
-	glabsmodel "github.com/eulersexception/glabs-ui/model"
-	glabsutil "github.com/eulersexception/glabs-ui/util"
-
-	"fyne.io/fyne"
-	"fyne.io/fyne/app"
-	"fyne.io/fyne/layout"
-	"fyne.io/fyne/widget"
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/theme"
+	"fyne.io/fyne/v2/widget"
 )
 
-var dialogButtonSize = fyne.NewSize(80, 30)
-var dialogWindowSize = fyne.NewSize(400, 150)
+func CreateHomeView(myApp fyne.App) {
+	myWindow := myApp.NewWindow("glabs")
+	myWindow.Resize(fyne.NewSize(1200, 600))
+	menueBar := createMenueBar()
+	sepLine := canvas.NewLine(color.White)
+	menue := container.NewVSplit(menueBar, sepLine)
 
-type HomeView struct {
-	App       fyne.App
-	Window    fyne.Window
-	TabBar    *widget.TabContainer
-	News      *widget.TextGrid
-	Buttons   *widget.SplitContainer
-	Container *fyne.Container
-	MainMenu  *fyne.MainMenu
+	right := container.NewVBox(widget.NewLabel("Test"))
+	changeCourseButtons := createAddEditDeleteButtonsForCourses()
+	mainAccordion := createCourseAccordion(right)
+	scrollableAccordion := container.NewVScroll(mainAccordion)
+	themeButtons := createButtonsforDarkLightMode()
+	changeCourseButtonsBox := container.NewVBox(changeCourseButtons[0], changeCourseButtons[1], changeCourseButtons[2])
+	buttons := container.NewVBox(changeCourseButtonsBox, themeButtons)
+	left := container.NewVSplit(scrollableAccordion, buttons)
+	left.SetOffset(1)
+	split := container.NewHSplit(left, right)
+	split.SetOffset(0.5)
+	content := container.NewBorder(menue, layout.NewSpacer(), split, layout.NewSpacer())
+
+	myWindow.SetContent(content)
+	myWindow.ShowAndRun()
 }
 
-func NewHomeview() *HomeView {
-	h := &HomeView{
-		App: app.New(),
-	}
+func createMenueBar() *widget.Menu {
+	menu := widget.NewMenu(fyne.NewMenu("Menu",
+		fyne.NewMenuItem("Datei", func() {
 
-	h.Window = h.App.NewWindow("GLabs")
-	h.MainMenu = glabsutil.MakeMainMenu()
-	h.Window.SetMainMenu(h.MainMenu)
-	h.TabBar = widget.NewTabContainer()
+		}),
+	))
 
-	h.Buttons = widget.NewHSplitContainer(makeButtonForCourseOverview(h.TabBar), MakeButtonForCourseCreation(h.TabBar))
-	h.News = makeNewsContent()
-	h.Container = fyne.NewContainerWithLayout(layout.NewVBoxLayout(), layout.NewSpacer(), h.News, layout.NewSpacer(), layout.NewSpacer(), h.Buttons)
-	item := widget.NewTabItem("Home", h.Container)
-	h.TabBar.Append(item)
-	h.TabBar.SelectTab(item)
-	h.Window.SetContent(h.TabBar)
-	h.Window.Resize(fyne.NewSize(1200, 800))
-
-	return h
+	return menu
 }
 
-func makeNewsContent() *widget.TextGrid {
-	newsTicker := widget.NewTextGrid()
-	newsTicker.SetText("Here you can see a lot of updates for all the repos")
+func createButtonsforDarkLightMode() *fyne.Container {
+	var lightButton, darkButton *widget.Button
 
-	return newsTicker
-}
-
-func MakeButtonForCourseCreation(tc *widget.TabContainer) *widget.Button {
-
-	createCourseButton := widget.NewButton("Kurs erstellen", func() {
-		mainWindow := glabsutil.GetMainWindow()
-
-		// initializing new window, creating entries and form
-		w := fyne.CurrentApp().NewWindow("Kurs erstellen")
-		courseNameEntry := widget.NewEntry()
-		courseNameEntry.SetPlaceHolder("Kurs Bezeichnung")
-		courseDescription := widget.NewMultiLineEntry()
-		courseDescription.SetPlaceHolder("Kursbeschreibung eingeben")
-		form := widget.NewForm(widget.NewFormItem("Kurs", courseNameEntry), widget.NewFormItem("Beschreibung", courseDescription))
-
-		// ok button
-		doneButton := widget.NewButton("Fertig", func() {
-			doneWindow := fyne.CurrentApp().NewWindow(fmt.Sprintf("Kurs \"%s\" erstellen?", courseNameEntry.Text))
-			message := widget.NewLabel(fmt.Sprintf("Soll der Kurs \"%s\" erstellt werden?", courseNameEntry.Text))
-			messageBox := fyne.NewContainerWithLayout(layout.NewCenterLayout(), message)
-			ok := widget.NewButton("OK", func() {
-				courseDescription.SetReadOnly(true)
-				courseNameEntry.SetReadOnly(true)
-				mainWindow.Content().Refresh()
-				mainWindow.RequestFocus()
-				doneWindow.Close()
-				w.Close()
-			})
-			cancel := widget.NewButton("Abbrechen", func() {
-				doneWindow.Close()
-				w.RequestFocus()
-			})
-
-			buttonBox := widget.NewHSplitContainer(ok, cancel)
-			doneWindow.SetContent(widget.NewVBox(layout.NewSpacer(), messageBox, layout.NewSpacer(), buttonBox))
-			doneWindow.Resize(dialogWindowSize)
-			doneWindow.CenterOnScreen()
-			doneWindow.Show()
-		})
-
-		// cancel button
-		cancelButton := glabsutil.MakeCancelButtonForDialog(mainWindow, w)
-
-		// wrapping widgets in container
-		buttons := widget.NewHSplitContainer(doneButton, cancelButton)
-		container := widget.NewVScrollContainer(widget.NewVBox(form, layout.NewSpacer(), buttons))
-		w.SetContent(container)
-		w.Resize(fyne.NewSize(800, 600))
-
-		// displaying on center of screen
-		w.CenterOnScreen()
-		w.Show()
+	lightButton = widget.NewButton("Light", func() {
+		fyne.CurrentApp().Settings().SetTheme(theme.LightTheme())
+		lightButton.Disable()
+		darkButton.Enable()
 	})
 
-	return createCourseButton
-}
-
-func makeButtonForCourseOverview(tc *widget.TabContainer) *widget.Button {
-	overviewButton := widget.NewButton("Kursübersicht", func() {
-		courseOverview := NewCourseOverview(createDummyCourses(30), tc)
-		item := widget.NewTabItem("Kursübersicht", courseOverview.Container)
-		tc.Append(item)
-		item.Content.Refresh()
+	darkButton = widget.NewButton("Dark", func() {
+		fyne.CurrentApp().Settings().SetTheme(theme.DarkTheme())
+		darkButton.Disable()
+		lightButton.Enable()
 	})
 
-	return overviewButton
-}
+	buttonGroup := container.NewVBox(lightButton, darkButton)
 
-func createDummyCourses(n int) []*glabsmodel.Course {
-	courses := make([]*glabsmodel.Course, 0)
-
-	for i := 0; i < n; i++ {
-		name := fmt.Sprintf("AlgoDat %02d", i)
-		description := fmt.Sprintf("Algorithmen pur Teil %d", i)
-		course := &glabsmodel.Course{Name: name, Description: description, Semesters: nil}
-		courses = append(courses, course)
-	}
-
-	return courses
+	return buttonGroup
 }

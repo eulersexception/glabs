@@ -5,22 +5,14 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	util "github.com/eulersexception/glabs-ui/util"
 	DB "modernc.org/ql"
 )
 
-// Team - Name is the primary key. All fields are public an
-
-// Getter or Setter functions relate to database operations.
 type Team struct {
-	TeamID int64  `ql:"index xID"`
+	TeamID *int64 `ql:"index xID"`
 	Name   string `ql:"uindex xName, name TeamName"`
 }
 
-// NewTeam creates a new team and stores the object in DB.
-// String argument for name must not be empty.
-// If a team with given name exists already in DB, the existing dataset will be overwritten.
-// Returns a new teamo.
 func NewTeam(name string) (*Team, string) {
 	if name == "" {
 		res := "\n+++ Enter valid team name."
@@ -43,36 +35,9 @@ func NewTeam(name string) (*Team, string) {
 	return team, ""
 }
 
-func (t *Team) AddStudent(s *Student) {
-	NewStudentTeam(s.MatrikelNr, t.Name)
-}
-
-func (t *Team) RemoveStudent(s *Student) {
-	RemoveStudentFromTeam(s.MatrikelNr, t.Name)
-}
-
-// UpdateTeam changes a teams record in DB.
-// Returns an error if the update fails.
-func (t *Team) UpdateTeam(newName string) {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
-
-	if _, _, err := db.Run(DB.NewRWCtx(), `
-			BEGIN TRANSACTION;
-				UPDATE Team	TeamName = $1 WHERE TeamName = $2;
-				UPDATE StudentTeam TeamName = $1 WHERE TeamName = $2;
-				UPDATE TeamAssignment TeamName = $1 WHERE TeamName = $2;
-			COMMIT;
-	`, newName, t.Name); err != nil {
-		panic(err)
-	}
-}
-
-// This function updates team record in DB.
-// An update could be a creation or edition of a record.
 func (t *Team) setTeam() {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	_, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -87,15 +52,13 @@ func (t *Team) setTeam() {
 	}
 }
 
-// GetTeam fetches team from DB with an argument of type string as name.
-// Returns an error if fetch fails or a pointer to the Team.
 func GetTeam(name string) *Team {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	rss, _, e := db.Run(DB.NewRWCtx(), `
 				BEGIN TRANSACTION;
-					SELECT id(), TeamName FROM Team WHERE TeamName = $1;
+					SELECT * FROM Team WHERE TeamName = $1;
 				COMMIT;
 			`, name)
 
@@ -106,9 +69,7 @@ func GetTeam(name string) *Team {
 	t := &Team{}
 
 	for _, rs := range rss {
-
 		if er := rs.Do(false, func(data []interface{}) (bool, error) {
-
 			if err := DB.Unmarshal(t, data); err != nil {
 				return false, err
 			}
@@ -122,11 +83,25 @@ func GetTeam(name string) *Team {
 	return t
 }
 
-// DeleteTeam removes a team by name (string) from DB.
-// Returns an error if operation fails.
+func (t *Team) UpdateTeam(newName string) {
+	UpdateTeamNameForStudents(t.Name, newName)
+	UpdateTeamForAssignments(t.Name, newName)
+
+	db := GetDB()
+	defer FlushAndClose(db)
+
+	if _, _, err := db.Run(DB.NewRWCtx(), `
+				BEGIN TRANSACTION;
+					UPDATE Team	TeamName = $1 WHERE TeamName = $2;
+				COMMIT;
+		`, newName, t.Name); err != nil {
+		panic(err)
+	}
+}
+
 func DeleteTeam(name string) {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	if _, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -139,14 +114,22 @@ func DeleteTeam(name string) {
 	}
 }
 
+func (t Team) JoinAssignment(assignmentPath string) {
+	NewTeamAssignment(t.Name, assignmentPath)
+}
+
+func (t *Team) AddStudent(s *Student) {
+	NewStudentTeam(s.MatrikelNr, t.Name)
+}
+
+func (t *Team) RemoveStudent(s *Student) {
+	RemoveStudentFromTeam(s.MatrikelNr, t.Name)
+}
+
 func (fst *Team) Equals(scd *Team) bool {
 	if scd == nil || fst.Name != scd.Name {
 		return false
 	}
 
 	return true
-}
-
-func (t Team) JoinAssignment(assignmentPath string) {
-	NewTeamAssignment(t.Name, assignmentPath)
 }
