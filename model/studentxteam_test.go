@@ -80,6 +80,7 @@ func TestDeleteTeamWithStudents(t *testing.T) {
 	DeleteTeam(testTeam.Name)
 
 	want := make([]Student, 0)
+
 	got := GetStudentsForTeam(testTeam.Name)
 
 	if !cmp.Equal(want, got) {
@@ -100,6 +101,7 @@ func TestDeleteStudentExistingInMultipleTeams(t *testing.T) {
 	DeleteStudent(testStudent.MatrikelNr)
 
 	want := make([]Team, 0)
+
 	got := GetTeamsForStudent(testStudent.MatrikelNr)
 
 	if !cmp.Equal(want, got) {
@@ -149,13 +151,13 @@ func TestUpdateMatrikelNummer(t *testing.T) {
 	testTeam1, _ := NewTeam("TestStudentTeam1")
 	testTeam2, _ := NewTeam("TestStudentTeam2")
 	testStudent, _ := NewStudent("Peter", "North", "PeNo", "peter@north.com", 9999)
-
 	testTeam1.AddStudent(testStudent)
 	testTeam2.AddStudent(testStudent)
-
 	UpdateMatrikelNummer(testStudent.MatrikelNr, 11111)
 	testStudent.MatrikelNr = 11111
+
 	want := testStudent
+
 	got := GetStudent(11111)
 
 	if !cmp.Equal(want, got) {

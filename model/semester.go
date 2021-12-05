@@ -3,8 +3,6 @@ package model
 import (
 	"fmt"
 
-	"github.com/eulersexception/glabs-ui/util"
-
 	DB "modernc.org/ql"
 )
 
@@ -36,8 +34,8 @@ func NewSemester(coursePath string, path string) *Semester {
 }
 
 func (s *Semester) setSemester() {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	_, _, e := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -51,8 +49,8 @@ func (s *Semester) setSemester() {
 }
 
 func GetSemester(path string) *Semester {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	rss, _, e := db.Run(nil, `
 		SELECT * FROM Semester WHERE SemesterPath = $1;
@@ -65,9 +63,7 @@ func GetSemester(path string) *Semester {
 	s := &Semester{}
 
 	for _, rs := range rss {
-
 		if er := rs.Do(false, func(data []interface{}) (bool, error) {
-
 			if err := DB.Unmarshal(s, data); err != nil {
 				return false, err
 			}
@@ -82,8 +78,8 @@ func GetSemester(path string) *Semester {
 }
 
 func (s *Semester) UpdateSemester(course string) {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	_, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -97,7 +93,7 @@ func (s *Semester) UpdateSemester(course string) {
 }
 
 func DeleteSemester(path string) {
-	db := util.GetDB()
+	db := GetDB()
 	defer db.Close()
 
 	if _, _, err := db.Run(DB.NewRWCtx(), `
@@ -110,7 +106,7 @@ func DeleteSemester(path string) {
 }
 
 func GetAllSemestersForCourse(coursePath string) []Semester {
-	db := util.GetDB()
+	db := GetDB()
 
 	rss, _, e := db.Run(DB.NewRWCtx(), `
 			SELECT * FROM Semester WHERE CoursePath = $1;
@@ -123,11 +119,9 @@ func GetAllSemestersForCourse(coursePath string) []Semester {
 	semesters := make([]Semester, 0)
 
 	for _, rs := range rss {
-
 		s := &Semester{}
 
 		if er := rs.Do(false, func(data []interface{}) (bool, error) {
-
 			if err := DB.Unmarshal(s, data); err != nil {
 				return false, nil
 			}
@@ -140,7 +134,7 @@ func GetAllSemestersForCourse(coursePath string) []Semester {
 		}
 	}
 
-	defer util.FlushAndClose(db)
+	FlushAndClose(db)
 
 	return semesters
 }

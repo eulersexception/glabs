@@ -5,7 +5,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	util "github.com/eulersexception/glabs-ui/util"
 	DB "modernc.org/ql"
 )
 
@@ -37,8 +36,8 @@ func NewTeam(name string) (*Team, string) {
 }
 
 func (t *Team) setTeam() {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	_, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -54,8 +53,8 @@ func (t *Team) setTeam() {
 }
 
 func GetTeam(name string) *Team {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	rss, _, e := db.Run(DB.NewRWCtx(), `
 				BEGIN TRANSACTION;
@@ -70,9 +69,7 @@ func GetTeam(name string) *Team {
 	t := &Team{}
 
 	for _, rs := range rss {
-
 		if er := rs.Do(false, func(data []interface{}) (bool, error) {
-
 			if err := DB.Unmarshal(t, data); err != nil {
 				return false, err
 			}
@@ -87,17 +84,11 @@ func GetTeam(name string) *Team {
 }
 
 func (t *Team) UpdateTeam(newName string) {
-	//check := GetTeam(newName)
-
-	//if check.Name == newName {
-	//	util.WarningLogger.Printf("Team with name %s already exists.\n", newName)
-	//} else {
-
 	UpdateTeamNameForStudents(t.Name, newName)
 	UpdateTeamForAssignments(t.Name, newName)
 
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	if _, _, err := db.Run(DB.NewRWCtx(), `
 				BEGIN TRANSACTION;
@@ -106,12 +97,11 @@ func (t *Team) UpdateTeam(newName string) {
 		`, newName, t.Name); err != nil {
 		panic(err)
 	}
-	//}
 }
 
 func DeleteTeam(name string) {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	if _, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;

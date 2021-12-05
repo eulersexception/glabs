@@ -12,7 +12,7 @@ import (
 )
 
 func CreateHomeView(myApp fyne.App) {
-	myWindow := myApp.NewWindow("Glabs")
+	myWindow := myApp.NewWindow("glabs")
 	myWindow.Resize(fyne.NewSize(1200, 600))
 	menueBar := createMenueBar()
 	sepLine := canvas.NewLine(color.White)
@@ -35,27 +35,14 @@ func CreateHomeView(myApp fyne.App) {
 	myWindow.ShowAndRun()
 }
 
-func createMenueBar() *widget.Menu { //*container.Split {
+func createMenueBar() *widget.Menu {
 	menu := widget.NewMenu(fyne.NewMenu("Menu",
 		fyne.NewMenuItem("Datei", func() {
 
 		}),
 	))
 
-	// t := widget.NewToolbar(
-	// 	widget.NewToolbarAction(theme.DocumentCreateIcon(), func() {}),
-	// 	widget.NewToolbarSeparator(),
-	// 	widget.NewToolbarAction(theme.ContentCutIcon(), func() {}),
-	// 	widget.NewToolbarAction(theme.ContentCopyIcon(), func() {}),
-	// 	widget.NewToolbarAction(theme.ContentPasteIcon(), func() {}),
-	// 	widget.NewToolbarSpacer(),
-	// 	widget.NewToolbarAction(theme.HelpIcon(), func() {}),
-	// )
-
-	//menueBar := container.NewHSplit(layout.NewSpacer(), t)
-	//menueBar.SetOffset(1.0)
-
-	return menu //menueBar
+	return menu
 }
 
 func createButtonsforDarkLightMode() *fyne.Container {

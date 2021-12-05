@@ -6,8 +6,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	DB "modernc.org/ql"
-
-	util "github.com/eulersexception/glabs-ui/util"
 )
 
 type Student struct {
@@ -25,7 +23,7 @@ func NewStudent(name string, firstName string, nickName string, email string, ma
 		return nil, res
 	}
 
-	if !util.IsValidMail(email) {
+	if !IsValidMail(email) {
 		res := "\n+++ Enter valid email address.\n"
 		return nil, res
 	}
@@ -51,7 +49,7 @@ func NewStudent(name string, firstName string, nickName string, email string, ma
 }
 
 func (s *Student) setStudent() {
-	db := util.GetDB()
+	db := GetDB()
 
 	_, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -64,12 +62,12 @@ func (s *Student) setStudent() {
 		panic(err)
 	}
 
-	util.FlushAndClose(db)
+	FlushAndClose(db)
 }
 
 func GetStudent(matrikelNr int64) *Student {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	rss, _, e := db.Run(DB.NewRWCtx(), `
 			BEGIN TRANSACTION;
@@ -84,9 +82,7 @@ func GetStudent(matrikelNr int64) *Student {
 	s := &Student{}
 
 	for _, rs := range rss {
-
 		if er := rs.Do(false, func(data []interface{}) (bool, error) {
-
 			if err := DB.Unmarshal(s, data); err != nil {
 				return false, err
 			}
@@ -102,10 +98,7 @@ func GetStudent(matrikelNr int64) *Student {
 }
 
 func (s *Student) UpdateStudent() {
-	db := util.GetDB()
-	// defer util.FlushAndClose(db)
-
-	// util.WarningLogger.Printf("Student before update: Matrikel %d, name = %s, nickname = %s\n", s.MatrikelNr, s.Name, s.NickName)
+	db := GetDB()
 
 	if _, _, err := db.Run(DB.NewRWCtx(), `
 			BEGIN TRANSACTION;
@@ -117,19 +110,14 @@ func (s *Student) UpdateStudent() {
 		panic(err)
 	}
 
-	util.FlushAndClose(db)
-
-	// newS := GetStudent(s.MatrikelNr)
-
-	// util.WarningLogger.Printf("Student after update: Matrikel %d, name = %s, nickname = %s\n", newS.MatrikelNr, newS.Name, newS.NickName)
-
+	FlushAndClose(db)
 }
 
 func UpdateMatrikelNummer(oldNum int64, newNum int64) {
 	if oldNum != newNum {
 		UpdateStudentMatrikel(oldNum, newNum)
-		db := util.GetDB()
-		defer util.FlushAndClose(db)
+		db := GetDB()
+		defer FlushAndClose(db)
 
 		_, _, err := db.Run(DB.NewRWCtx(), `
 			BEGIN TRANSACTION;
@@ -145,8 +133,8 @@ func UpdateMatrikelNummer(oldNum int64, newNum int64) {
 }
 
 func DeleteStudent(matrikelNr int64) {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	if _, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -171,5 +159,6 @@ func (fst *Student) Equals(scd *Student) bool {
 	if scd == nil {
 		return false
 	}
+
 	return fst.MatrikelNr == scd.MatrikelNr && fst.Email == scd.Email && fst.Name == scd.Name && fst.FirstName == scd.FirstName
 }

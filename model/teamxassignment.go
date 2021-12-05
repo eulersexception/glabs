@@ -3,8 +3,6 @@ package model
 import (
 	"fmt"
 
-	"github.com/eulersexception/glabs-ui/util"
-
 	DB "modernc.org/ql"
 )
 
@@ -15,8 +13,8 @@ type TeamAssignment struct {
 }
 
 func NewTeamAssignment(name string, path string) {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	id := fmt.Sprintf("%s%s", name, path)
 
@@ -33,7 +31,7 @@ func NewTeamAssignment(name string, path string) {
 }
 
 func GetAssignmentsForTeam(name string) []Assignment {
-	db := util.GetDB()
+	db := GetDB()
 
 	rss, _, e := db.Run(DB.NewRWCtx(), `
 			SELECT NamePath, TeamName, AssignmentPath  
@@ -51,7 +49,6 @@ func GetAssignmentsForTeam(name string) []Assignment {
 		t := &TeamAssignment{}
 
 		if er := rs.Do(false, func(data []interface{}) (bool, error) {
-
 			if err := DB.Unmarshal(t, data); err != nil {
 				return false, err
 			}
@@ -63,8 +60,7 @@ func GetAssignmentsForTeam(name string) []Assignment {
 		}
 	}
 
-	util.FlushAndClose(db)
-
+	FlushAndClose(db)
 	assignments := make([]Assignment, 0)
 
 	for _, v := range entries {
@@ -76,7 +72,7 @@ func GetAssignmentsForTeam(name string) []Assignment {
 }
 
 func GetTeamsForAssignment(path string) []Team {
-	db := util.GetDB()
+	db := GetDB()
 
 	rss, _, e := db.Run(DB.NewRWCtx(), `
 			SELECT * FROM TeamAssignment 
@@ -93,12 +89,9 @@ func GetTeamsForAssignment(path string) []Team {
 		t := &TeamAssignment{}
 
 		if er := rs.Do(false, func(data []interface{}) (bool, error) {
-
 			if err := DB.Unmarshal(t, data); err != nil {
 				return false, err
 			}
-
-			//util.WarningLogger.Printf("Teamassignment: a = %s, t = %s\n", t.AssignmentPath, t.TeamName)
 
 			entries = append(entries, *t)
 			return true, nil
@@ -107,12 +100,10 @@ func GetTeamsForAssignment(path string) []Team {
 		}
 	}
 
-	util.FlushAndClose(db)
-
+	FlushAndClose(db)
 	teams := make([]Team, 0)
 
 	for _, v := range entries {
-		// util.WarningLogger.Printf("Teamassignment:  t = %s\n", v.TeamName)
 		team := GetTeam(v.TeamName)
 		teams = append(teams, *team)
 	}
@@ -121,8 +112,8 @@ func GetTeamsForAssignment(path string) []Team {
 }
 
 func RemoveTeamFromAssignment(name string, path string) {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	_, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -137,8 +128,8 @@ func RemoveTeamFromAssignment(name string, path string) {
 }
 
 func RemoveAssignmentsForTeam(name string) {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	_, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -161,8 +152,8 @@ func UpdateTeamForAssignments(oldName string, newName string) {
 }
 
 func RemoveTeamsForAssignment(path string) {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	_, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -180,7 +171,6 @@ func UpdateAssignmentForTeams(oldPath string, newPath string) {
 	RemoveTeamsForAssignment(oldPath)
 
 	for _, v := range teams {
-		util.InfoLogger.Printf("Creating new TeamAssignment for team = %s and assignment = %s\n", v.Name, newPath)
 		NewTeamAssignment(v.Name, newPath)
 	}
 }

@@ -3,7 +3,6 @@ package model
 import (
 	"testing"
 
-	"github.com/eulersexception/glabs-ui/util"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -20,7 +19,7 @@ func init() {
 }
 
 func TestMailValid(t *testing.T) {
-	got := util.IsValidMail("valid@mail.com")
+	got := IsValidMail("valid@mail.com")
 
 	if !got {
 		t.Errorf("want = true, got = false\n")
@@ -28,7 +27,7 @@ func TestMailValid(t *testing.T) {
 }
 
 func TestMailInvalid(t *testing.T) {
-	got := util.IsValidMail("in valid@mail#com")
+	got := IsValidMail("in valid@mail#com")
 
 	if got {
 		t.Error("want = false, got = true\n")
@@ -93,6 +92,7 @@ func TestDeleteStudent(t *testing.T) {
 	DeleteStudent(stud.MatrikelNr)
 
 	want := &Student{}
+
 	got := GetStudent(stud.MatrikelNr)
 
 	if !cmp.Equal(want, got) {

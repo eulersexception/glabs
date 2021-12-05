@@ -3,7 +3,6 @@ package model
 import (
 	"fmt"
 
-	util "github.com/eulersexception/glabs-ui/util"
 	DB "modernc.org/ql"
 )
 
@@ -33,8 +32,8 @@ func NewClone(localPath string, branch string) (*Clone, string) {
 }
 
 func (c Clone) setClone() {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	if _, _, e := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -46,8 +45,8 @@ func (c Clone) setClone() {
 }
 
 func GetClone(localPath string) *Clone {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	rss, _, e := db.Run(DB.NewRWCtx(), `
 				BEGIN TRANSACTION;
@@ -62,9 +61,7 @@ func GetClone(localPath string) *Clone {
 	c := &Clone{}
 
 	for _, rs := range rss {
-
 		if er := rs.Do(false, func(data []interface{}) (bool, error) {
-
 			if err := DB.Unmarshal(c, data); err != nil {
 				return false, err
 			}
@@ -79,8 +76,8 @@ func GetClone(localPath string) *Clone {
 }
 
 func GetAllAssignmentsForClone(path string) []Assignment {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	rss, _, e := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -98,7 +95,6 @@ func GetAllAssignmentsForClone(path string) []Assignment {
 		a := &Assignment{}
 
 		if er := rs.Do(false, func(data []interface{}) (bool, error) {
-
 			if err := DB.Unmarshal(a, data); err != nil {
 				return false, err
 			}
@@ -116,8 +112,8 @@ func GetAllAssignmentsForClone(path string) []Assignment {
 }
 
 func (c *Clone) UpdateClone() {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	_, _, err := db.Run(DB.NewRWCtx(), `
 			BEGIN TRANSACTION;
@@ -131,8 +127,8 @@ func (c *Clone) UpdateClone() {
 }
 
 func UpdateClonePath(oldPath string, newPath string) {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	_, _, err := db.Run(DB.NewRWCtx(), `
 			BEGIN TRANSACTION;
@@ -147,8 +143,8 @@ func UpdateClonePath(oldPath string, newPath string) {
 }
 
 func DeleteClone(localPath string) {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	if _, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;

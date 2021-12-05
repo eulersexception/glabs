@@ -48,11 +48,11 @@ func TestDeleteSemester(t *testing.T) {
 		Path:       "test_semester/hm.edu",
 		CoursePath: "test_course",
 	}
-
 	NewSemester(s.CoursePath, s.Path)
 	DeleteSemester(s.Path)
 
 	want := &Semester{}
+
 	got := GetSemester(s.Path)
 
 	if !cmp.Equal(want, got) {
@@ -65,14 +65,13 @@ func TestUpdateSemester(t *testing.T) {
 		Path:       "test_semester/hm.edu",
 		CoursePath: "test_course",
 	}
-
 	NewSemester(s.CoursePath, s.Path)
 	newCourse := "test_course_2"
-
 	s.UpdateSemester(newCourse)
 	s.CoursePath = newCourse
 
 	want := s
+	
 	got := GetSemester(s.Path)
 
 	if !cmp.Equal(want, got) {

@@ -26,6 +26,7 @@ func TestJoinAssignmentRemoveFromAssignment(t *testing.T) {
 
 	want, _ := NewTeam("TestTeamAssignment")
 	want.JoinAssignment(assignment.AssignmentPath)
+
 	got := GetTeamsForAssignment(assignment.AssignmentPath)[0]
 
 	if want.Name != got.Name {

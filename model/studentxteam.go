@@ -3,7 +3,6 @@ package model
 import (
 	"fmt"
 
-	"github.com/eulersexception/glabs-ui/util"
 	DB "modernc.org/ql"
 )
 
@@ -14,8 +13,8 @@ type StudentTeam struct {
 }
 
 func NewStudentTeam(matrikelNr int64, teamName string) {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	id := fmt.Sprintf("%d%s", matrikelNr, teamName)
 
@@ -32,7 +31,7 @@ func NewStudentTeam(matrikelNr int64, teamName string) {
 }
 
 func GetTeamsForStudent(matrikelNr int64) []Team {
-	db := util.GetDB()
+	db := GetDB()
 
 	rss, _, e := db.Run(DB.NewRWCtx(), `
 			SELECT MatrikelTeam, MatrikelNr, TeamName 
@@ -50,19 +49,19 @@ func GetTeamsForStudent(matrikelNr int64) []Team {
 		s := &StudentTeam{}
 
 		if er := rs.Do(false, func(data []interface{}) (bool, error) {
-
 			if err := DB.Unmarshal(s, data); err != nil {
 				return false, err
 			}
 
 			entries = append(entries, *s)
+
 			return true, nil
 		}); er != nil {
 			panic(er)
 		}
 	}
 
-	util.FlushAndClose(db)
+	FlushAndClose(db)
 
 	teams := make([]Team, 0)
 
@@ -75,7 +74,7 @@ func GetTeamsForStudent(matrikelNr int64) []Team {
 }
 
 func GetStudentsForTeam(team string) []Student {
-	db := util.GetDB()
+	db := GetDB()
 
 	rss, _, e := db.Run(DB.NewRWCtx(), `
 			SELECT MatrikelTeam, MatrikelNr, TeamName 
@@ -93,7 +92,6 @@ func GetStudentsForTeam(team string) []Student {
 		s := &StudentTeam{}
 
 		if er := rs.Do(false, func(data []interface{}) (bool, error) {
-
 			if err := DB.Unmarshal(s, data); err != nil {
 				return false, err
 			}
@@ -105,7 +103,7 @@ func GetStudentsForTeam(team string) []Student {
 		}
 	}
 
-	util.FlushAndClose(db)
+	FlushAndClose(db)
 
 	studs := make([]Student, 0)
 
@@ -122,8 +120,6 @@ func UpdateTeamNameForStudents(oldTeamName string, newTeamName string) {
 	RemoveStudentsForTeam(oldTeamName)
 
 	for _, v := range students {
-		//util.WarningLogger.Printf("oldname = %s, newName= %s\n", oldTeamName, newTeamName)
-		//v.PrintData()
 		NewStudentTeam(v.MatrikelNr, newTeamName)
 	}
 }
@@ -133,15 +129,13 @@ func UpdateStudentMatrikel(oldNum int64, newNum int64) {
 	RemoveTeamsForStudent(oldNum)
 
 	for _, v := range teams {
-		//util.WarningLogger.Printf("oldname = %d, newName= %d\n", oldNum, newNum)
-		//util.WarningLogger.Printf("Team %s", v.Name)
 		NewStudentTeam(newNum, v.Name)
 	}
 }
 
 func RemoveStudentsForTeam(team string) {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	if _, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -153,8 +147,8 @@ func RemoveStudentsForTeam(team string) {
 }
 
 func RemoveTeamsForStudent(matrikelNr int64) {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	if _, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -166,8 +160,8 @@ func RemoveTeamsForStudent(matrikelNr int64) {
 }
 
 func RemoveStudentFromTeam(matrikelNr int64, team string) {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	_, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;

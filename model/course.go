@@ -3,7 +3,7 @@ package model
 import (
 	"fmt"
 
-	util "github.com/eulersexception/glabs-ui/util"
+	"github.com/eulersexception/glabs-ui/util"
 	DB "modernc.org/ql"
 )
 
@@ -13,7 +13,6 @@ type Course struct {
 }
 
 func NewCourse(path string) *Course {
-
 	if path == "" {
 		fmt.Println("Enter valid course path.")
 		return nil
@@ -29,8 +28,8 @@ func NewCourse(path string) *Course {
 }
 
 func (c *Course) setCourse() {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	_, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -44,8 +43,8 @@ func (c *Course) setCourse() {
 }
 
 func GetCourse(path string) *Course {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	rss, _, e := db.Run(nil, `
 		SELECT * FROM Course WHERE CoursePath = $1;
@@ -58,9 +57,7 @@ func GetCourse(path string) *Course {
 	c := &Course{}
 
 	for _, rs := range rss {
-
 		if er := rs.Do(false, func(data []interface{}) (bool, error) {
-
 			if err := DB.Unmarshal(c, data); err != nil {
 				return false, err
 			}
@@ -75,8 +72,8 @@ func GetCourse(path string) *Course {
 }
 
 func UpdateCourse(oldPath string, newPath string) {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	_, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -96,8 +93,8 @@ func DeleteCourse(path string) {
 	if len(semesters) > 0 {
 		util.WarningLogger.Printf("Trying to delete course on path %s with existing references to semesters. First update course path on related semesters or delete related semesters.\n", path)
 	} else {
-		db := util.GetDB()
-		defer util.FlushAndClose(db)
+		db := GetDB()
+		defer FlushAndClose(db)
 
 		_, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -112,8 +109,8 @@ func DeleteCourse(path string) {
 }
 
 func (c *Course) AddSemesterToCourse(path string) {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	_, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -127,8 +124,7 @@ func (c *Course) AddSemesterToCourse(path string) {
 }
 
 func GetAllCourses() []Course {
-	db := util.GetDB()
-
+	db := GetDB()
 	rss, _, e := db.Run(nil, `SELECT * FROM Course;`)
 
 	if e != nil {
@@ -141,7 +137,6 @@ func GetAllCourses() []Course {
 		c := &Course{}
 
 		if er := rs.Do(false, func(data []interface{}) (bool, error) {
-
 			if err := DB.Unmarshal(c, data); err != nil {
 				return false, err
 			}
@@ -154,7 +149,7 @@ func GetAllCourses() []Course {
 		}
 	}
 
-	defer util.FlushAndClose(db)
+	FlushAndClose(db)
 
 	return courses
 }

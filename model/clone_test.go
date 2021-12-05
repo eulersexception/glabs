@@ -45,6 +45,7 @@ func TestNewCloneFailMissingBranch(t *testing.T) {
 
 func TestGetClone(t *testing.T) {
 	want, _ := NewClone(clone.LocalPath, clone.Branch)
+
 	got := GetClone(clone.LocalPath)
 
 	if !cmp.Equal(want, got) {
@@ -57,8 +58,8 @@ func TestGetClone(t *testing.T) {
 func TestUpdateClone(t *testing.T) {
 	want, _ := NewClone(clone.LocalPath, clone.Branch)
 	want.Branch = "master"
-
 	want.UpdateClone()
+
 	got := GetClone(want.LocalPath)
 
 	if !cmp.Equal(want, got) {
@@ -73,6 +74,7 @@ func TestDeleteClone(t *testing.T) {
 	DeleteClone(clone.LocalPath)
 
 	want := &Clone{}
+
 	got := GetClone(clone.LocalPath)
 
 	if !cmp.Equal(want, got) {
@@ -84,13 +86,13 @@ func TestDeleteClone(t *testing.T) {
 
 func TestGetAllAssignmentsForClone(t *testing.T) {
 	c, _ := NewClone("/Users/obraun/lectures/statistik/labs/gitlab/semester/ob-20ws/blatt1", "develop")
-
 	a1, _ := NewAssignment("PathA", "SemesterX", "group", "BlattA", true, c.LocalPath, "blabla.com")
 	a2, _ := NewAssignment("PathB", "SemesterY", "single", "BlattB", false, c.LocalPath, "blabla.com")
 	a3, _ := NewAssignment("PathC", "SemesterZ", "pair", "BlattC", true, c.LocalPath, "blabla.com")
 
 	want := make([]Assignment, 0)
 	want = append(want, *a1, *a2, *a3)
+
 	got := GetAllAssignmentsForClone(c.LocalPath)
 
 	if cmp.Equal(want, got) {
@@ -105,16 +107,15 @@ func TestGetAllAssignmentsForClone(t *testing.T) {
 
 func TestUpdateClonePath(t *testing.T) {
 	c, _ := NewClone("/Users/obraun/lectures/statistik/labs/gitlab/semester/ob-20ws/blatt1", "develop")
-
 	a1, _ := NewAssignment("PathA", "SemesterX", "group", "BlattA", true, c.LocalPath, "blabla.com")
 	a2, _ := NewAssignment("PathB", "SemesterY", "single", "BlattB", false, c.LocalPath, "blabla.com")
 	a3, _ := NewAssignment("PathC", "SemesterZ", "pair", "BlattC", true, c.LocalPath, "blabla.com")
-
 	UpdateClonePath(c.LocalPath, "new/clone/path")
 	c.LocalPath = "new/clone/path"
 
 	want := make([]Assignment, 0)
 	want = append(want, *a1, *a2, *a3)
+
 	got := GetAllAssignmentsForClone(c.LocalPath)
 
 	if cmp.Equal(want, got) {

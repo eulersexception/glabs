@@ -55,7 +55,6 @@ func NewAssignmentView(path string) *AssignmentView {
 	values := container.NewVBox(aPathValue, aSemPathValue, aPerValue, aDescValue, aContRegValue)
 
 	editButton := widget.NewButton("Edit", func() {
-		// editLabels := container.NewVBox(aPathLabel, aSemPathLabel, aPerLabel, aDescLabel, aContRegLabel, aStarterCodeLabel, aCloneLabel)
 		pathEntry := widget.NewEntryWithData(aPathStr)
 		pathEntry.SetPlaceHolder(aPathValue.Text)
 		editPath := widget.NewFormItem(aPathLabel.Text, pathEntry)

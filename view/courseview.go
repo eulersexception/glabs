@@ -2,7 +2,6 @@ package view
 
 import (
 	"fmt"
-	"regexp"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -35,38 +34,35 @@ func createCourseAccordion(right *fyne.Container) *widget.Accordion {
 }
 
 func createAddEditDeleteButtonsForCourses() []*widget.Button {
-	createCourseDialog := fyne.CurrentApp().NewWindow("Create Course")
-	createCourseDialog.Resize(fyne.NewSize(600, 400))
+	courseDialog := fyne.CurrentApp().NewWindow("Create Course")
+	courseDialog.Resize(fyne.NewSize(400, 100))
 
 	add := widget.NewButton("+", func() {
 		newCourseLabel := widget.NewLabel("Enter new course path: ")
 		newCourseEntry := widget.NewEntry()
 		newCourseEntry.SetPlaceHolder("Enter a valid course path")
-		labels := container.NewVBox(newCourseLabel)
-		entries := container.NewVBox(newCourseEntry)
-
-		test, _ := regexp.MatchString(`\s*`, newCourseEntry.Text)
 
 		ok := widget.NewButton("Add Course", func() {
-			if !test {
+			if newCourseEntry.Text != "" {
 				model.NewCourse(newCourseEntry.Text)
-				done := widget.NewPopUp(widget.NewLabel(fmt.Sprintf("New course %s created", newCourseEntry.Text)), createCourseDialog.Canvas())
+				done := widget.NewPopUp(widget.NewLabel(fmt.Sprintf("New course %s created", newCourseEntry.Text)), courseDialog.Canvas())
 				done.Show()
 			} else {
-				warning := widget.NewPopUp(widget.NewLabel("Enter a valid path"), createCourseDialog.Canvas())
+				warning := widget.NewPopUp(widget.NewLabel("Enter a valid path"), courseDialog.Canvas())
 				warning.Show()
 			}
 		})
 		cancel := widget.NewButton("               Cancel               ", func() {
-			createCourseDialog.Close()
+			courseDialog.Close()
 		})
 
+		labels := container.NewVBox(newCourseLabel)
+		entries := container.NewVBox(newCourseEntry)
 		labels.Add(ok)
 		entries.Add(cancel)
 		content := container.NewHBox(labels, entries)
-
-		createCourseDialog.SetContent(content)
-		createCourseDialog.Show()
+		courseDialog.SetContent(content)
+		courseDialog.Show()
 	})
 	edit := widget.NewButton("Edit", func() {})
 	delete := widget.NewButton("Delete", func() {})

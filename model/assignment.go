@@ -1,7 +1,6 @@
 package model
 
 import (
-	util "github.com/eulersexception/glabs-ui/util"
 	DB "modernc.org/ql"
 )
 
@@ -51,8 +50,8 @@ func NewAssignment(assignmentPath string, sem string, per string, desc string,
 }
 
 func (a Assignment) setAssignment() {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	_, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -66,8 +65,8 @@ func (a Assignment) setAssignment() {
 }
 
 func GetAssignment(path string) *Assignment {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	rss, _, e := db.Run(DB.NewRWCtx(), `
 			BEGIN TRANSACTION;
@@ -83,9 +82,7 @@ func GetAssignment(path string) *Assignment {
 	a := &Assignment{}
 
 	for _, rs := range rss {
-
 		if er := rs.Do(false, func(data []interface{}) (bool, error) {
-
 			if err := DB.Unmarshal(a, data); err != nil {
 				return false, err
 			}
@@ -101,8 +98,8 @@ func GetAssignment(path string) *Assignment {
 }
 
 func (a *Assignment) UpdateAssignment() {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	if _, _, err := db.Run(DB.NewRWCtx(), `
 			BEGIN TRANSACTION;
@@ -117,9 +114,8 @@ func (a *Assignment) UpdateAssignment() {
 
 func UpdateAssignmentPath(oldPath string, newPath string) {
 	UpdateAssignmentForTeams(oldPath, newPath)
-
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	_, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -133,8 +129,8 @@ func UpdateAssignmentPath(oldPath string, newPath string) {
 }
 
 func DeleteAssignment(path string) {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	if _, _, err := db.Run(DB.NewRWCtx(), `
 			BEGIN TRANSACTION;			
@@ -147,7 +143,7 @@ func DeleteAssignment(path string) {
 }
 
 func GetAllAssignmentsForSemester(semesterPath string) []Assignment {
-	db := util.GetDB()
+	db := GetDB()
 
 	rss, _, e := db.Run(DB.NewRWCtx(), `
 		SELECT * FROM Assignment WHERE SemesterPath = $1;
@@ -161,9 +157,7 @@ func GetAllAssignmentsForSemester(semesterPath string) []Assignment {
 
 	for _, rs := range rss {
 		a := &Assignment{}
-
 		if er := rs.Do(false, func(data []interface{}) (bool, error) {
-
 			if err := DB.Unmarshal(a, data); err != nil {
 				return false, err
 			}
@@ -176,7 +170,7 @@ func GetAllAssignmentsForSemester(semesterPath string) []Assignment {
 		}
 	}
 
-	util.FlushAndClose(db)
+	FlushAndClose(db)
 
 	return assignments
 }

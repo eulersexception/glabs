@@ -3,7 +3,6 @@ package model
 import (
 	"fmt"
 
-	util "github.com/eulersexception/glabs-ui/util"
 	DB "modernc.org/ql"
 )
 
@@ -35,8 +34,8 @@ func NewStarterCode(url string, fromBranch string, protectToBranch bool) (*Start
 }
 
 func (s StarterCode) setStarterCode() {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	if _, _, e := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -48,8 +47,8 @@ func (s StarterCode) setStarterCode() {
 }
 
 func GetStarterCode(url string) *StarterCode {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	rss, _, e := db.Run(DB.NewRWCtx(), `
 			BEGIN TRANSACTION;
@@ -64,9 +63,7 @@ func GetStarterCode(url string) *StarterCode {
 	s := &StarterCode{}
 
 	for _, rs := range rss {
-
 		if er := rs.Do(false, func(data []interface{}) (bool, error) {
-
 			if err := DB.Unmarshal(s, data); err != nil {
 				return false, err
 			}
@@ -81,10 +78,8 @@ func GetStarterCode(url string) *StarterCode {
 }
 
 func GetAllAssignmentsForStarterCode(url string) []Assignment {
-	db := util.GetDB()
-
-	// TODO: Check if defer still goes wrong...
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	rss, _, e := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -102,7 +97,6 @@ func GetAllAssignmentsForStarterCode(url string) []Assignment {
 		assignment := &Assignment{}
 
 		if er := rs.Do(false, func(data []interface{}) (bool, error) {
-
 			if err := DB.Unmarshal(assignment, data); err != nil {
 				return false, err
 			}
@@ -119,8 +113,8 @@ func GetAllAssignmentsForStarterCode(url string) []Assignment {
 }
 
 func (s *StarterCode) UpdateStarterCode() {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	_, _, err := db.Run(DB.NewRWCtx(), `
 			BEGIN TRANSACTION;
@@ -135,8 +129,8 @@ func (s *StarterCode) UpdateStarterCode() {
 }
 
 func UpdateStarterUrl(oldUrl string, newUrl string) {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	_, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
@@ -151,8 +145,8 @@ func UpdateStarterUrl(oldUrl string, newUrl string) {
 }
 
 func DeleteStarterCode(url string) {
-	db := util.GetDB()
-	defer util.FlushAndClose(db)
+	db := GetDB()
+	defer FlushAndClose(db)
 
 	if _, _, err := db.Run(DB.NewRWCtx(), `
 		BEGIN TRANSACTION;
