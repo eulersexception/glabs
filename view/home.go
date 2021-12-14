@@ -23,7 +23,11 @@ func CreateHomeView(myApp fyne.App) {
 	mainAccordion := createCourseAccordion(right)
 	scrollableAccordion := container.NewVScroll(mainAccordion)
 	themeButtons := createButtonsforDarkLightMode()
-	changeCourseButtonsBox := container.NewVBox(changeCourseButtons[0], changeCourseButtons[1], changeCourseButtons[2])
+	changeCourseButtonsBox := container.NewVBox(
+		changeCourseButtons[0],
+		changeCourseButtons[1],
+		changeCourseButtons[2],
+	)
 	buttons := container.NewVBox(changeCourseButtonsBox, themeButtons)
 	left := container.NewVSplit(scrollableAccordion, buttons)
 	left.SetOffset(1)

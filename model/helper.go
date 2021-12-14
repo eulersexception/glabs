@@ -10,7 +10,7 @@ import (
 
 var EmailRegex = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 
-var DBNAME = os.Args[1]
+var DBNAME = "" // os.Args[1]
 
 var OPTIONS = &database.Options{
 	CanCreate:      true,
@@ -30,6 +30,9 @@ func GetDB() *database.DB {
 	var db *database.DB
 	var err error
 
+	path, _ := os.Getwd()
+	path += "/tmp/test"
+
 	if DBNAME == "" {
 		db, err = database.OpenFile("default_db", OPTIONS)
 	} else {
@@ -37,7 +40,6 @@ func GetDB() *database.DB {
 	}
 
 	if err != nil {
-
 		fmt.Printf("%v\n", err.Error())
 		panic(err)
 	}
