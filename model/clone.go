@@ -75,6 +75,39 @@ func GetClone(localPath string) *Clone {
 	return c
 }
 
+func GetAllClones() []Clone {
+	db := GetDB()
+	defer FlushAndClose(db)
+
+	rss, _, e := db.Run(nil, `
+	 	SELECT * FROM Clone;
+	`)
+
+	if e != nil {
+		panic(e)
+	}
+
+	clones := make([]Clone, 0)
+
+	for _, rs := range rss {
+		c := &Clone{}
+
+		if er := rs.Do(false, func(data []interface{}) (bool, error) {
+			if err := DB.Unmarshal(c, data); err != nil {
+				return false, err
+			}
+
+			clones = append(clones, *c)
+
+			return true, nil
+		}); er != nil {
+			panic(er)
+		}
+	}
+
+	return clones
+}
+
 func GetAllAssignmentsForClone(path string) []Assignment {
 	db := GetDB()
 	defer FlushAndClose(db)
