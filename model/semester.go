@@ -126,7 +126,7 @@ func GetAllSemestersForCourse(coursePath string) []Semester {
 	}
 
 	semesters := make([]Semester, 0)
-
+  
 	for _, rs := range rss {
 		s := &Semester{}
 
