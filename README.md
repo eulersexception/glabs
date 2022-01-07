@@ -9,10 +9,10 @@ glabs is a tool to manage repositories that maps the functionality provided by G
 Clone this repository locally and run
 
 ```
-go run main.go "tmp/test"
+go run main.go
 ```
 
-which will create a local database in the folder "tmp/test" in the project root and start the application.
+This will create a local database named "default_db" in the project root and start the application. The database is initially filled with dummy data which will be dropped everytime the application is closed. To work with own data some changes must be applied to `main.go`. Currently Teams and Students can not be created by view elements and data input via file upload is not supported.
 
 ## Unit tests
 

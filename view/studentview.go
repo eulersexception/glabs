@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/eulersexception/glabs-ui/model"
-	glabsmodel "github.com/eulersexception/glabs-ui/model"
 	"github.com/eulersexception/glabs-ui/util"
 
 	"fyne.io/fyne/v2"
@@ -14,11 +13,9 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-type StudentView struct {
-	Content *fyne.Container
-	Student *glabsmodel.Student
-}
 
+// NewStudentView returns a window with details about a Student and
+// corresponding buttons for deleting Student and editing data.
 func NewStudentView(team *model.Team) fyne.Window {
 	studentWindow := fyne.CurrentApp().NewWindow(fmt.Sprintf("Students in Team %s", team.Name))
 	students := model.GetStudentsForTeam(team.Name)
@@ -30,7 +27,6 @@ func NewStudentView(team *model.Team) fyne.Window {
 	firstNames := container.NewVBox()
 	emails := container.NewVBox()
 	edits := container.NewVBox()
-	//resets := container.NewVBox()
 	deletes := container.NewVBox()
 	content := container.NewHBox()
 
@@ -47,7 +43,6 @@ func NewStudentView(team *model.Team) fyne.Window {
 	firstNames.Add(colFirstName)
 	emails.Add(colEmail)
 	edits.Add(colEmpty)
-	// resets.Add(colEmpty)
 	deletes.Add(colEmpty)
 
 	for _, v := range students {
@@ -107,14 +102,6 @@ func NewStudentView(team *model.Team) fyne.Window {
 			studentWindow.Content().Refresh()
 		})
 
-		// reset := widget.NewButton("Reset", func() {
-		//  matrikelStr.Set(fmt.Sprint(v.MatrikelNr))
-		//	nickStr.Set(v.NickName)
-		//	nameStr.Set(v.Name)
-		//	firstNameStr.Set(v.FirstName)
-		//	emailStr.Set(v.Email)
-		//})
-
 		delete := widget.NewButton("Delete", func() {
 			model.DeleteStudent(stud.MatrikelNr)
 			newStudentWindow := NewStudentView(team)
@@ -128,7 +115,6 @@ func NewStudentView(team *model.Team) fyne.Window {
 		firstNames.Add(firstNameEntry)
 		emails.Add(emailEntry)
 		edits.Add(edit)
-		//resets.Add(reset)
 		deletes.Add(delete)
 	}
 
@@ -138,9 +124,7 @@ func NewStudentView(team *model.Team) fyne.Window {
 	content.Add(firstNames)
 	content.Add(emails)
 	content.Add(edits)
-	//content.Add(resets)
 	content.Add(deletes)
-
 	studentWindow.SetContent(content)
 
 	return studentWindow

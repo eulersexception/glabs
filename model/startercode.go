@@ -77,6 +77,41 @@ func GetStarterCode(url string) *StarterCode {
 	return s
 }
 
+func GetAllStarterCodes() []StarterCode {
+	db := GetDB()
+	defer FlushAndClose(db)
+
+	rss, _, e := db.Run(nil, `
+	SELECT * FROM StarterCode;
+`)
+
+	if e != nil {
+		panic(e)
+	}
+
+	starters := make([]StarterCode, 0)
+
+	for _, rs := range rss {
+		s := &StarterCode{}
+
+		if er := rs.Do(false, func(data []interface{}) (bool, error) {
+			if err := DB.Unmarshal(s, data); err != nil {
+				return false, err
+			}
+
+			starters = append(starters, *s)
+
+			return true, nil
+		}); er != nil {
+			panic(er)
+		}
+	}
+
+	return starters
+
+}
+
+
 func GetAllAssignmentsForStarterCode(url string) []Assignment {
 	db := GetDB()
 	defer FlushAndClose(db)

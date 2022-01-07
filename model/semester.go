@@ -92,6 +92,37 @@ func (s *Semester) UpdateSemester(course string) {
 	}
 }
 
+func (s *Semester) UpdateSemesterPath(semPath string) {
+	assignments := GetAllAssignmentsForSemester(s.Path)
+
+	for _, v := range assignments {
+		v.SemesterPath = semPath
+		v.UpdateAssignment()
+	}
+}
+
+func GetAllSemestersForCourse(coursePath string) []Semester {
+	db := GetDB()
+
+	c := s.CoursePath
+
+	DeleteSemester(s.Path)
+	NewSemester(c, semPath)
+
+	// db := GetDB()
+	// defer FlushAndClose(db)
+
+	// _, _, err := db.Run(DB.NewRWCtx(), `
+	// 	BEGIN TRANSACTION;
+	// 		UPDATE Semester SemesterPath = $1 WHERE SemesterPath = $2;
+	// 	COMMIT;
+	// `, semPath, s.Path)
+
+	// if err != nil {
+	// 	panic(err)
+	// }
+}
+
 func DeleteSemester(path string) {
 	db := GetDB()
 	defer db.Close()
@@ -117,7 +148,7 @@ func GetAllSemestersForCourse(coursePath string) []Semester {
 	}
 
 	semesters := make([]Semester, 0)
-
+  
 	for _, rs := range rss {
 		s := &Semester{}
 
