@@ -3,7 +3,6 @@ package model
 import (
 	"fmt"
 
-	"github.com/eulersexception/glabs-ui/util"
 	DB "modernc.org/ql"
 )
 
@@ -90,9 +89,7 @@ func UpdateCourse(oldPath string, newPath string) {
 func DeleteCourse(path string) {
 	semesters := GetAllSemestersForCourse(path)
 
-	if len(semesters) > 0 {
-		util.WarningLogger.Printf("Trying to delete course on path %s with existing references to semesters. First update course path on related semesters or delete related semesters.\n", path)
-	} else {
+	if len(semesters) == 0 {
 		db := GetDB()
 		defer FlushAndClose(db)
 

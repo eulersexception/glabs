@@ -101,28 +101,6 @@ func (s *Semester) UpdateSemesterPath(semPath string) {
 	}
 }
 
-func GetAllSemestersForCourse(coursePath string) []Semester {
-	db := GetDB()
-
-	c := s.CoursePath
-
-	DeleteSemester(s.Path)
-	NewSemester(c, semPath)
-
-	// db := GetDB()
-	// defer FlushAndClose(db)
-
-	// _, _, err := db.Run(DB.NewRWCtx(), `
-	// 	BEGIN TRANSACTION;
-	// 		UPDATE Semester SemesterPath = $1 WHERE SemesterPath = $2;
-	// 	COMMIT;
-	// `, semPath, s.Path)
-
-	// if err != nil {
-	// 	panic(err)
-	// }
-}
-
 func DeleteSemester(path string) {
 	db := GetDB()
 	defer db.Close()

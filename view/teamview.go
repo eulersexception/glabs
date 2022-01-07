@@ -8,7 +8,6 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 	"github.com/eulersexception/glabs-ui/model"
-	"github.com/eulersexception/glabs-ui/util"
 )
 
 // NewTeamView creates a window containing detailed information about a Team
@@ -35,10 +34,6 @@ func NewTeamView(a *model.Assignment) fyne.Window {
 
 	teams := model.GetTeamsForAssignment(a.AssignmentPath)
 
-	for i, v := range teams {
-		util.WarningLogger.Printf("%d. loop over teams - name = %s\n", i, v.Name)
-	}
-
 	sort.Slice(teams, func(i int, j int) bool { return teams[i].Name < teams[j].Name })
 
 	for _, v := range teams {
@@ -51,9 +46,6 @@ func NewTeamView(a *model.Assignment) fyne.Window {
 		edit := widget.NewButton("Edit", func() {
 			newName := input.Text
 			team.UpdateTeam(newName)
-
-			util.WarningLogger.Printf("Input.Value = %s, edited Team = %s", newName, team.Name)
-
 			newTeamWindow := NewTeamView(a)
 			newTeamWindow.Show()
 			teamWindow.Close()
