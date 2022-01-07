@@ -12,7 +12,7 @@ Clone this repository locally and run
 go run main.go
 ```
 
-This will create a local database named "default_db" in the project root and start the application. The database is initially filled with dummy data which will be dropped everytime the application is closed. To work with own data some changes must be applied to `main.go`. Currently Teams and Students can not be created by view elements and data input via file upload is not supported.
+This will create a local database named "default_db" in the project root and start the application. The database is initially filled with dummy data which will be dropped everytime the application is closed. To work with own data some changes must be applied to `main.go`. Currently Assignments, Teams and Students can not be created by view elements and data input via file upload is not supported.
 
 ## Unit tests
 
