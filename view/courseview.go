@@ -9,11 +9,14 @@ import (
 	"github.com/eulersexception/glabs-ui/model"
 )
 
-func NewCourseView() {
-	// courses := model.GetAllCourses()
-}
+// rightCont is a reference to the main part on the right side of the view.
+// This reference enables a correct update of the view on changes.
+var rightCont *fyne.Container
 
-func createCourseAccordion(right *fyne.Container) *widget.Accordion {
+// CreateCourseAccordion generates a sidebar with the main accordion items which are buttons.
+// Clicking on an accordion item unfolds a list of semester for a Course.
+func CreateCourseAccordion(right *fyne.Container) *widget.Accordion {
+	rightCont = right
 	semestersByCourse := semestersByCourse(right)
 	mainAccordion := widget.NewAccordion()
 
@@ -33,7 +36,9 @@ func createCourseAccordion(right *fyne.Container) *widget.Accordion {
 	return mainAccordion
 }
 
-func createAddEditDeleteButtonsForCourses() []*widget.Button {
+// CreateAddEditDeleteButtonsForCourses populates the sidebar with additional buttons for
+// creating and editing Courses.
+func CreateAddEditButtonsForCourses(acc *fyne.Container) []*widget.Button {
 	courseDialog := fyne.CurrentApp().NewWindow("Create Course")
 	courseDialog.Resize(fyne.NewSize(400, 100))
 
@@ -46,6 +51,9 @@ func createAddEditDeleteButtonsForCourses() []*widget.Button {
 			if newCourseEntry.Text != "" {
 				model.NewCourse(newCourseEntry.Text)
 				done := widget.NewPopUp(widget.NewLabel(fmt.Sprintf("New course %s created", newCourseEntry.Text)), courseDialog.Canvas())
+				newAcc := CreateCourseAccordion(rightCont)
+				acc.Objects[0] = newAcc
+				acc.Refresh()
 				done.Show()
 			} else {
 				warning := widget.NewPopUp(widget.NewLabel("Enter a valid path"), courseDialog.Canvas())
@@ -64,13 +72,77 @@ func createAddEditDeleteButtonsForCourses() []*widget.Button {
 		courseDialog.SetContent(content)
 		courseDialog.Show()
 	})
-	edit := widget.NewButton("Edit", func() {})
-	delete := widget.NewButton("Delete", func() {})
+
+	edit := widget.NewButton("Edit", func() {
+		w := CreateCourseEditWindow(acc)
+		w.Show()
+	})
 
 	buttons := make([]*widget.Button, 0)
 	buttons = append(buttons, add)
 	buttons = append(buttons, edit)
-	buttons = append(buttons, delete)
 
 	return buttons
+}
+
+// CreateCourseEditWindow opens a new window that shows a table where
+// each row contains information, entries and buttons related to a Course.
+func CreateCourseEditWindow(acc *fyne.Container) fyne.Window {
+	w := fyne.CurrentApp().NewWindow("Course Edit")
+	courses := model.GetAllCourses()
+	names := container.NewVBox()
+	entries := container.NewVBox()
+	okButtons := container.NewVBox()
+	deleteButtons := container.NewVBox()
+	editSemestersButtons := container.NewVBox()
+
+	names.Add(widget.NewLabel("Current Path"))
+	entries.Add(widget.NewLabel("New Path                   "))
+	okButtons.Add(widget.NewLabel(""))
+	deleteButtons.Add(widget.NewLabel(""))
+	editSemestersButtons.Add(widget.NewLabel(""))
+
+	for _, v := range courses {
+		c := v
+		old := widget.NewLabel(c.Path)
+		new := widget.NewEntry()
+		new.SetPlaceHolder("Enter Path")
+
+		okButton := widget.NewButton("OK", func() {
+			model.UpdateCourse(c.Path, new.Text)
+			newAcc := CreateCourseAccordion(rightCont)
+			acc.Objects[0] = newAcc
+			acc.Refresh()
+		})
+
+		deleteButton := widget.NewButton("Delete", func() {
+			semesters := model.GetAllSemestersForCourse(c.Path)
+
+			if len(semesters) > 0 {
+				popUp := widget.NewPopUp(container.NewCenter(widget.NewLabel(fmt.Sprintf("Delete existing semesters before deleting course '%s'", c.Path))), w.Canvas())
+				popUp.Show()
+			} else {
+				model.DeleteCourse(c.Path)
+				newAcc := CreateCourseAccordion(rightCont)
+				acc.Objects[0] = newAcc
+				acc.Refresh()
+			}
+		})
+
+		editSemesterButton := widget.NewButton("Edit Semesters", func() {
+			editWindow := CreateSemesterEditWindow(&c, acc)
+			editWindow.Show()
+		})
+
+		names.Add(old)
+		entries.Add(new)
+		okButtons.Add(okButton)
+		deleteButtons.Add(deleteButton)
+		editSemestersButtons.Add(editSemesterButton)
+	}
+
+	content := container.NewHBox(names, entries, okButtons, deleteButtons, editSemestersButtons)
+	w.SetContent(content)
+
+	return w
 }

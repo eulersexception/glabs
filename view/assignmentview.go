@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/eulersexception/glabs-ui/model"
-	glabsmodel "github.com/eulersexception/glabs-ui/model"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -19,9 +18,11 @@ import (
 
 type AssignmentView struct {
 	Content    *fyne.Container
-	Assignment *glabsmodel.Assignment
+	Assignment *model.Assignment
 }
 
+// NewAssignmentView generates an AssignmentView, which contains details for a specific
+// Assignment including buttons to retrieve information about participating Teams, related Clone and Starter Code.
 func NewAssignmentView(path string) *AssignmentView {
 	a := model.GetAssignment(path)
 
@@ -157,14 +158,12 @@ func NewAssignmentView(path string) *AssignmentView {
 		editWindow.Show()
 	})
 
-	// aStarterCodeLabel := widget.NewLabel("StarterCode:")
 	aStarterButton := widget.NewButton("Starter Code", func() {
 		starterWindow := fyne.CurrentApp().NewWindow((fmt.Sprintf("Starter Code for %s", a.StarterUrl)))
 		starterWindow.SetContent(NewStarterCodeView(a.StarterUrl))
 		starterWindow.Show()
 	})
 
-	// aCloneLabel := widget.NewLabel("Clone:")
 	aCloneButton := widget.NewButton("Clone", func() {
 		cloneWindow := fyne.CurrentApp().NewWindow(fmt.Sprintf("Clone for %s", a.LocalPath))
 		cloneWindow.SetContent(NewCloneView(a.LocalPath))
@@ -204,4 +203,59 @@ func createAssignmentList(semesterPath string, content *fyne.Container, right *f
 	}
 
 	return assignmentList
+}
+
+// NewAssignmentOverwievForClone creates a window that contains
+// a list of all Assignments for a Clone.
+func NewAssignmentOverwievForClone(clonePath string) fyne.Window {
+	w := fyne.CurrentApp().NewWindow(fmt.Sprintf("Assignments for Clone %s", clonePath))
+	assignments := model.GetAllAssignmentsForClone(clonePath)
+	paths := container.NewVBox(widget.NewLabel("Assignment Paths"))
+	details := container.NewVBox(layout.NewSpacer())
+
+	for _, v := range assignments {
+		a := v
+
+		paths.Add(widget.NewLabel(a.AssignmentPath))
+		detail := widget.NewButton("Details", func() {
+			detailsWindow := fyne.CurrentApp().NewWindow(fmt.Sprintf("Details Assignment %s", a.AssignmentPath))
+			detailsWindow.SetContent(NewAssignmentView(a.AssignmentPath).Content)
+			fyne.CurrentApp().Driver().AllWindows()[0].SetContent(CreateHomeView(fyne.CurrentApp()).Content())
+			fyne.CurrentApp().Driver().AllWindows()[0].Content().Refresh()
+			detailsWindow.Show()
+		})
+
+		details.Add(detail)
+	}
+
+	w.SetContent(container.NewHBox(paths, details))
+
+	return w
+}
+
+// NewAssignmentOverwievForStarterCode creates a window that contains
+// a list of all Assignments for a Starter Code.
+func NewAssignmentOverwievForStarterCode(starterUrl string) fyne.Window {
+	w := fyne.CurrentApp().NewWindow(fmt.Sprintf("Assignments for Starter Code %s", starterUrl))
+	assignments := model.GetAllAssignmentsForStarterCode(starterUrl)
+	paths := container.NewVBox(widget.NewLabel("Assignment Paths"))
+	details := container.NewVBox(layout.NewSpacer())
+
+	for _, v := range assignments {
+		a := v
+		paths.Add(widget.NewLabel(a.AssignmentPath))
+		detail := widget.NewButton("Details", func() {
+			detailsWindow := fyne.CurrentApp().NewWindow(fmt.Sprintf("Details Assignment %s", a.AssignmentPath))
+			detailsWindow.SetContent(NewAssignmentView(a.AssignmentPath).Content)
+			fyne.CurrentApp().Driver().AllWindows()[0].SetContent(CreateHomeView(fyne.CurrentApp()).Content())
+			fyne.CurrentApp().Driver().AllWindows()[0].Content().Refresh()
+			detailsWindow.Show()
+		})
+
+		details.Add(detail)
+	}
+
+	w.SetContent(container.NewHBox(paths, details))
+
+	return w
 }

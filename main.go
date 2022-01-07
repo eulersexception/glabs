@@ -9,10 +9,11 @@ import (
 )
 
 func main() {
+
 	util.InitLoggers()
 	model.CreateTables()
 	model.InitData()
 	myApp := app.New()
-	view.CreateHomeView(myApp)
+	view.CreateHomeView(myApp).ShowAndRun()
 	model.DropTables()
 }
