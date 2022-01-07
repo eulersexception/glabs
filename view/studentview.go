@@ -6,13 +6,11 @@ import (
 	"strconv"
 
 	"github.com/eulersexception/glabs-ui/model"
-	"github.com/eulersexception/glabs-ui/util"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 )
-
 
 // NewStudentView returns a window with details about a Student and
 // corresponding buttons for deleting Student and editing data.
@@ -71,8 +69,6 @@ func NewStudentView(team *model.Team) fyne.Window {
 			newMatrikelNr, err := strconv.ParseInt(matrikelEntry.Text, 10, 64)
 
 			if err != nil {
-				util.WarningLogger.Printf("Not a valid decimal number as Matrikelnummer.\n")
-
 				allWindows := fyne.CurrentApp().Driver().AllWindows()
 				var warning *widget.PopUp
 				warningCheck := widget.NewButton("OK", func() {
