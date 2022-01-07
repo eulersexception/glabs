@@ -11,6 +11,8 @@ import (
 	"github.com/eulersexception/glabs-ui/util"
 )
 
+// NewTeamView creates a window containing detailed information about a Team
+// including buttons to edit or delete Team data and list Students who are members.
 func NewTeamView(a *model.Assignment) fyne.Window {
 	teamWindow := fyne.CurrentApp().NewWindow(fmt.Sprintf("Teams %s", a.AssignmentPath))
 

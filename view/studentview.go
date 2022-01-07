@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/eulersexception/glabs-ui/model"
-	glabsmodel "github.com/eulersexception/glabs-ui/model"
 	"github.com/eulersexception/glabs-ui/util"
 
 	"fyne.io/fyne/v2"
@@ -14,11 +13,8 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-type StudentView struct {
-	Content *fyne.Container
-	Student *glabsmodel.Student
-}
-
+// NewStudentView returns a window with details about a Student and
+// corresponding buttons for deleting Student and editing data.
 func NewStudentView(team *model.Team) fyne.Window {
 	studentWindow := fyne.CurrentApp().NewWindow(fmt.Sprintf("Students in Team %s", team.Name))
 	students := model.GetStudentsForTeam(team.Name)

@@ -14,7 +14,7 @@ import (
 var rightCont *fyne.Container
 
 // CreateCourseAccordion generates a sidebar with the main accordion items which are buttons.
-// Clicking on an accordion item unfolds a list of semester for a course.
+// Clicking on an accordion item unfolds a list of semester for a Course.
 func CreateCourseAccordion(right *fyne.Container) *widget.Accordion {
 	rightCont = right
 	semestersByCourse := semestersByCourse(right)
@@ -37,7 +37,7 @@ func CreateCourseAccordion(right *fyne.Container) *widget.Accordion {
 }
 
 // CreateAddEditDeleteButtonsForCourses populates the sidebar with additional buttons for
-// creating and editing courses.
+// creating and editing Courses.
 func CreateAddEditButtonsForCourses(acc *fyne.Container) []*widget.Button {
 	courseDialog := fyne.CurrentApp().NewWindow("Create Course")
 	courseDialog.Resize(fyne.NewSize(400, 100))
@@ -86,7 +86,7 @@ func CreateAddEditButtonsForCourses(acc *fyne.Container) []*widget.Button {
 }
 
 // CreateCourseEditWindow opens a new window that shows a table where
-// each row contains information, entries and buttons related to a course.
+// each row contains information, entries and buttons related to a Course.
 func CreateCourseEditWindow(acc *fyne.Container) fyne.Window {
 	w := fyne.CurrentApp().NewWindow("Course Edit")
 	courses := model.GetAllCourses()

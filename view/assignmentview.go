@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/eulersexception/glabs-ui/model"
-	glabsmodel "github.com/eulersexception/glabs-ui/model"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -19,9 +18,11 @@ import (
 
 type AssignmentView struct {
 	Content    *fyne.Container
-	Assignment *glabsmodel.Assignment
+	Assignment *model.Assignment
 }
 
+// NewAssignmentView generates an AssignmentView, which contains details for a specific
+// Assignment including buttons to retrieve information about participating Teams, related Clone and Starter Code.
 func NewAssignmentView(path string) *AssignmentView {
 	a := model.GetAssignment(path)
 
@@ -204,6 +205,8 @@ func createAssignmentList(semesterPath string, content *fyne.Container, right *f
 	return assignmentList
 }
 
+// NewAssignmentOverwievForClone creates a window that contains
+// a list of all Assignments for a Clone.
 func NewAssignmentOverwievForClone(clonePath string) fyne.Window {
 	w := fyne.CurrentApp().NewWindow(fmt.Sprintf("Assignments for Clone %s", clonePath))
 	assignments := model.GetAllAssignmentsForClone(clonePath)
@@ -230,6 +233,8 @@ func NewAssignmentOverwievForClone(clonePath string) fyne.Window {
 	return w
 }
 
+// NewAssignmentOverwievForStarterCode creates a window that contains
+// a list of all Assignments for a Starter Code.
 func NewAssignmentOverwievForStarterCode(starterUrl string) fyne.Window {
 	w := fyne.CurrentApp().NewWindow(fmt.Sprintf("Assignments for Starter Code %s", starterUrl))
 	assignments := model.GetAllAssignmentsForStarterCode(starterUrl)

@@ -11,6 +11,8 @@ import (
 	model "github.com/eulersexception/glabs-ui/model"
 )
 
+// NewCloneView provides an detail view for a Clone.
+// It returns a container object that is used as content for an existing window.
 func NewCloneView(localPath string) *fyne.Container {
 	cloneContainer := container.NewVBox()
 
@@ -31,6 +33,7 @@ func NewCloneView(localPath string) *fyne.Container {
 	return cloneContainer
 }
 
+// NewCloneOverview provides an overview for all existing Clones in a new window.
 func NewCloneOverview() fyne.Window {
 	clones := model.GetAllClones()
 	w := fyne.CurrentApp().NewWindow("Overview Clones")
@@ -89,6 +92,7 @@ func NewCloneOverview() fyne.Window {
 	return w
 }
 
+// NewEditCloneWindow creates a window to edit a Clone.
 func NewEditCloneWindow(c *model.Clone, w fyne.Window) fyne.Window {
 	editWindow := fyne.CurrentApp().NewWindow(fmt.Sprintf("Edit Clone %s", c.LocalPath))
 

@@ -13,7 +13,8 @@ import (
 	glabsmodel "github.com/eulersexception/glabs-ui/model"
 )
 
-// NewStarterCodeView is called from a
+// NewStarterCodeView provides an detail view for a Starter Code.
+// It returns a container object that is used as content for an existing window.
 func NewStarterCodeView(starterUrl string) *fyne.Container {
 	starterContainer := container.NewVBox()
 
@@ -37,6 +38,7 @@ func NewStarterCodeView(starterUrl string) *fyne.Container {
 	return starterContainer
 }
 
+// NewStarterCodeOverview provides an overview for all existing Starter Codes in a new window.
 func NewStarterCodeOverview() fyne.Window {
 	starters := model.GetAllStarterCodes()
 	w := fyne.CurrentApp().NewWindow("Overview Clones")
@@ -97,6 +99,7 @@ func NewStarterCodeOverview() fyne.Window {
 	return w
 }
 
+// NewEditStarterCodeWindow creates a window to edit a Starter Code.
 func NewEditStarterCodeWindow(s *model.StarterCode, w fyne.Window) fyne.Window {
 	editWindow := fyne.CurrentApp().NewWindow(fmt.Sprintf("Edit Starter Code %s", s.StarterUrl))
 

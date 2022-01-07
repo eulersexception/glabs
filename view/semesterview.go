@@ -12,7 +12,6 @@ import (
 	"github.com/eulersexception/glabs-ui/model"
 )
 
-// SemestersByCourse
 func semestersByCourse(content *fyne.Container) map[binding.String][]*widget.Button {
 	courses := model.GetAllCourses()
 	sort.Slice(courses, func(i int, j int) bool { return courses[i].Path < courses[j].Path })
@@ -53,7 +52,7 @@ func createSemesterButtons(coursePath string, content *fyne.Container) []*widget
 }
 
 // CreateSemesterEditWindow contains logic to display a list and edit options
-// for semesters related to a specific course within a new window.
+// for Semesters related to a specific Course within a new window.
 func CreateSemesterEditWindow(c *model.Course, acc *fyne.Container) fyne.Window {
 	w := fyne.CurrentApp().NewWindow(fmt.Sprintf("Edit semesters for course %s", c.Path))
 	semesters := model.GetAllSemestersForCourse(c.Path)
