@@ -30,6 +30,7 @@ func GetDB() *database.DB {
 	var db *database.DB
 	var err error
 
+
 	path, _ := os.Getwd()
 	path += "/tmp/test"
 
