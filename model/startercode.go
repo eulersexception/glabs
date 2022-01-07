@@ -111,6 +111,7 @@ func GetAllStarterCodes() []StarterCode {
 
 }
 
+
 func GetAllAssignmentsForStarterCode(url string) []Assignment {
 	db := GetDB()
 	defer FlushAndClose(db)

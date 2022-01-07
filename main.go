@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-
 	util.InitLoggers()
 	model.CreateTables()
 	model.InitData()

@@ -48,7 +48,6 @@ func CreateHomeView(myApp fyne.App) fyne.Window {
 // Default is dark mode. Light mode is not working properly.
 func CreateButtonsforDarkLightMode() *fyne.Container {
 	var lightButton, darkButton *widget.Button
-
 	lightButton = widget.NewButton("Light", func() {
 		fyne.CurrentApp().Settings().SetTheme(theme.LightTheme())
 		lightButton.Disable()

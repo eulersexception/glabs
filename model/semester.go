@@ -99,6 +99,10 @@ func (s *Semester) UpdateSemesterPath(semPath string) {
 		v.SemesterPath = semPath
 		v.UpdateAssignment()
 	}
+}
+
+func GetAllSemestersForCourse(coursePath string) []Semester {
+	db := GetDB()
 
 	c := s.CoursePath
 
@@ -144,7 +148,7 @@ func GetAllSemestersForCourse(coursePath string) []Semester {
 	}
 
 	semesters := make([]Semester, 0)
-
+  
 	for _, rs := range rss {
 		s := &Semester{}
 

@@ -15,9 +15,8 @@ import (
 // It returns a container object that is used as content for an existing window.
 func NewCloneView(localPath string) *fyne.Container {
 	cloneContainer := container.NewVBox()
-
 	clone := model.GetClone(localPath)
-
+  
 	pathLabel := widget.NewLabel("Local Path:")
 	path := widget.NewLabel(clone.LocalPath)
 
@@ -32,6 +31,7 @@ func NewCloneView(localPath string) *fyne.Container {
 
 	return cloneContainer
 }
+
 
 // NewCloneOverview provides an overview for all existing Clones in a new window.
 func NewCloneOverview() fyne.Window {
@@ -133,3 +133,4 @@ func NewEditCloneWindow(c *model.Clone, w fyne.Window) fyne.Window {
 
 	return editWindow
 }
+

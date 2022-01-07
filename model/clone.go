@@ -108,6 +108,7 @@ func GetAllClones() []Clone {
 	return clones
 }
 
+
 func GetAllAssignmentsForClone(path string) []Assignment {
 	db := GetDB()
 	defer FlushAndClose(db)

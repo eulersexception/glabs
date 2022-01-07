@@ -103,7 +103,6 @@ func NewTeamView(a *model.Assignment) fyne.Window {
 	content.Add(edits)
 	content.Add(deletes)
 	content.Add(students)
-
 	teamWindow.SetContent(content)
 
 	return teamWindow

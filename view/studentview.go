@@ -13,6 +13,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+
 // NewStudentView returns a window with details about a Student and
 // corresponding buttons for deleting Student and editing data.
 func NewStudentView(team *model.Team) fyne.Window {
@@ -124,7 +125,6 @@ func NewStudentView(team *model.Team) fyne.Window {
 	content.Add(emails)
 	content.Add(edits)
 	content.Add(deletes)
-
 	studentWindow.SetContent(content)
 
 	return studentWindow
